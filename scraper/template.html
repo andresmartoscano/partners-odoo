@@ -612,6 +612,12 @@
     .ref-sidebar { height: 280px; }
     .ref-detail { padding: 20px; }
   }
+
+.export-wrap{position:relative;display:inline-block}
+.export-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);min-width:130px;z-index:100;overflow:hidden}
+.export-menu.open{display:block}
+.export-menu button{display:block;width:100%;padding:8px 14px;text-align:left;background:none;border:none;font-size:.82rem;color:var(--text);cursor:pointer;white-space:nowrap}
+.export-menu button:hover{background:var(--bg)}
 </style>
 
 <!-- HEADER -->
@@ -645,10 +651,7 @@
     </div>
     <div class="spacer"></div>
     <span class="count-badge" id="p-count">90 partners</span>
-    <button class="export-btn" id="export-partners">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Exportar CSV
-    </button>
+    <div class="export-wrap"><button class="export-btn" onclick="toggleExport('export-menu-p')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Exportar &#9662;</button><div class="export-menu" id="export-menu-p"><button onclick="doExportPartners('csv');closeExport('export-menu-p')">CSV</button><button onclick="doExportPartners('xlsx');closeExport('export-menu-p')">Excel (.xlsx)</button></div></div>
   </div>
 
   <div class="table-wrap">
@@ -713,6 +716,9 @@
     </main>
   </div>
 
+
+</div>
+
 <div id="panel-clientes" class="tab-panel" role="tabpanel">
   <div class="toolbar">
     <span class="toolbar-label">Buscar</span>
@@ -720,13 +726,13 @@
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <input class="search-input" id="c-search" type="search" placeholder="Cliente, sector o partner...">
     </div>
-    <div class="ref-grade-filters">
-      <button class="ref-grade-filter active" data-grade="">Todos</button>
-      <button class="ref-grade-filter" data-grade="Gold">Gold</button>
-      <button class="ref-grade-filter" data-grade="Silver">Silver</button>
-      <button class="ref-grade-filter" data-grade="Ready">Ready</button>
+    <div class="grade-filters" id="c-grade-filters">
+      <button class="grade-btn active-all" data-grade="all">Todos</button>
+      <button class="grade-btn" data-grade="Gold">Gold</button>
+      <button class="grade-btn" data-grade="Silver">Silver</button>
+      <button class="grade-btn" data-grade="Ready">Ready</button>
     </div>
-    <button class="csv-btn" onclick="exportClientesCSV()">Exportar CSV</button>
+    <div class="export-wrap"><button class="csv-btn" onclick="toggleExport('export-menu-c')">Exportar &#9662;</button><div class="export-menu" id="export-menu-c"><button onclick="doExportClientes('csv');closeExport('export-menu-c')">CSV</button><button onclick="doExportClientes('xlsx');closeExport('export-menu-c')">Excel (.xlsx)</button></div></div>
     <span id="c-count" style="margin-left:auto;color:var(--muted);font-size:.8rem;white-space:nowrap"></span>
   </div>
   <div class="table-wrap">
@@ -746,11 +752,17 @@
     </div>
   </div>
 </div>
-</div>
 
 <script>
 __PARTNERS_DATA__
+
+
 __REFS_DATA__
+
+  // ── REF NAMES LIST ────────────────────────────────────────────────────────
+function buildRefNamesList(rid) {
+  if (!rid || !REFS[rid] || REFS[rid].length === 0) return '';
+  const refs = REFS[rid];
   const uid = 'rn_' + rid;
   const rows = refs.map((r, i) => {
     const sector = r.s ? `<td class="rn-sector">${r.s}</td>` : '<td class="rn-sector">—</td>';
@@ -904,19 +916,7 @@ document.getElementById('p-search').addEventListener('input', e => {
   applyFilters();
 });
 
-// ── CSV EXPORT: PARTNERS ───────────────────────────────────────────────────
-document.getElementById('export-partners').addEventListener('click', () => {
-  const visible = PARTNERS.filter(p =>
-    (filterGrade === 'all' || p.grade === filterGrade) &&
-    (!searchQ || p.name.toLowerCase().includes(searchQ))
-  ).sort((a, b) => {
-    let av = a[sortCol], bv = b[sortCol];
-    if (av === null) av = -Infinity;
-    if (bv === null) bv = -Infinity;
-    if (typeof av === 'string') return sortDir * av.localeCompare(bv, 'es');
-    return sortDir * (av - bv);
-  });
-  const cols = ['Nivel','Partner','Referencias','Retención (%)','Proy. medio (us.)','Proy. grande (~us.)','Expertos cert.','Sector 1','Sector 2','Sector 3'];
+const cols = ['Nivel','Partner','Referencias','Retención (%)','Proy. medio (us.)','Proy. grande (~us.)','Expertos cert.','Sector 1','Sector 2','Sector 3'];
   const rows = visible.map(p => [
     p.grade,
     `"${escape(p.name)}"`,
@@ -1100,25 +1100,96 @@ function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+
+// ── EXPORT HELPERS ──────────────────────────────────────────────────────────
+function toggleExport(id) {
+  var m = document.getElementById(id);
+  var wasOpen = m.classList.contains('open');
+  document.querySelectorAll('.export-menu.open').forEach(function(el){el.classList.remove('open');});
+  if (!wasOpen) m.classList.add('open');
+}
+function closeExport(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.export-wrap')) {
+    document.querySelectorAll('.export-menu.open').forEach(function(el){el.classList.remove('open');});
+  }
+});
+function escXml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toXlsXml(headers, rows) {
+  var hCells = headers.map(function(h){ return '<Cell><Data ss:Type="String">'+escXml(h)+'</Data></Cell>'; }).join('');
+  var dataRows = rows.map(function(r){
+    return '<Row>'+r.map(function(v){ return '<Cell><Data ss:Type="String">'+escXml(v)+'</Data></Cell>'; }).join('')+'</Row>';
+  }).join('');
+  return '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>'+
+    '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+
+    '<Worksheet ss:Name="Partners"><Table><Row>'+hCells+'</Row>'+dataRows+'</Table></Worksheet></Workbook>';
+}
+function downloadAs(content, filename, type) {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type:type}));
+  a.download = filename; a.click();
+}
+
+function doExportPartners(fmt) {
+  var visible = PARTNERS.filter(function(p){
+    return (filterGrade==='all'||p.grade===filterGrade) && (!searchQ||p.name.toLowerCase().includes(searchQ));
+  }).sort(function(a,b){
+    var av=a[sortCol],bv=b[sortCol];
+    if(av===null)av=-Infinity; if(bv===null)bv=-Infinity;
+    if(typeof av==='string') return sortDir*av.localeCompare(bv,'es');
+    return sortDir*(av-bv);
+  });
+  var headers = ['Nivel','Partner','Referencias','Retención (%)','Proy. medio (us.)','Proy. grande (~us.)','Expertos cert.','Sector 1','Sector 2','Sector 3'];
+  var rows = visible.map(function(p){ return [p.grade,p.name,p.refs,p.retention??'',p.avgUsers??'',p.largeUsers??'',p.experts,p.sectors[0]?.[0]??'',p.sectors[1]?.[0]??'',p.sectors[2]?.[0]??'']; });
+  if (fmt==='xlsx') {
+    downloadAs(toXlsXml(headers,rows),'partners-odoo-espana.xls','application/vnd.ms-excel');
+  } else {
+    var csv = ['﻿'+headers.join(','),...rows.map(function(r){return r.map(function(v){return '"'+(String(v||'').replace(/"/g,'""'))+'"';}).join(',');})].join('\r\n');
+    downloadAs(csv,'partners-odoo-espana.csv','text/csv;charset=utf-8');
+  }
+}
+
+function doExportClientes(fmt) {
+  var activeBtn = document.querySelector('#c-grade-filters .grade-btn.active-all,#c-grade-filters .grade-btn.active-gold,#c-grade-filters .grade-btn.active-silver,#c-grade-filters .grade-btn.active-ready');
+  var grade = (activeBtn && activeBtn.dataset.grade!=='all') ? activeBtn.dataset.grade : '';
+  var q = (document.getElementById('c-search').value||'').toLowerCase();
+  var rows = ALL_CLIENTS.filter(function(r){
+    return (!grade||r.grade===grade)&&(!q||r.name.toLowerCase().indexOf(q)>=0||r.sector.toLowerCase().indexOf(q)>=0||r.partner.toLowerCase().indexOf(q)>=0);
+  });
+  var headers = ['Cliente','Sector','Partner','Nivel'];
+  var data = rows.map(function(r){ return [r.name,r.sector,r.partner,r.grade]; });
+  if (fmt==='xlsx') {
+    downloadAs(toXlsXml(headers,data),'clientes-odoo-partners.xls','application/vnd.ms-excel');
+  } else {
+    var csv = ['﻿'+headers.join(','),...data.map(function(r){return r.map(function(v){return '"'+(String(v||'').replace(/"/g,'""'))+'"';}).join(',');})].join('\r\n');
+    downloadAs(csv,'clientes-odoo-partners.csv','text/csv;charset=utf-8');
+  }
+}
 // ── TAB SWITCHING ──────────────────────────────────────────────────────────
 
 // ── CLIENTES TAB ────────────────────────────────────────────────────────────
 let ALL_CLIENTS = [];
+let clientesBuilt = false;
 
-function buildClientesTable() {
+function initClientesTab() {
+  if (clientesBuilt) return;
+  clientesBuilt = true;
   ALL_CLIENTS = [];
-  PARTNERS.forEach(p => {
-    (REFS[p.rid] || []).forEach(r => {
-      ALL_CLIENTS.push({ name: r.n, sector: r.s || '—', partner: p.name, grade: p.grade, url: p.url });
+  PARTNERS.forEach(function(p) {
+    var list = REFS[p.rid] || [];
+    list.forEach(function(r) {
+      ALL_CLIENTS.push({ name: r.n || '', sector: r.s || '—', partner: p.name || '', grade: p.grade || '', url: p.url || null });
     });
   });
-  ALL_CLIENTS.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  ALL_CLIENTS.sort(function(a, b) { return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }); });
   renderClientes(ALL_CLIENTS);
 
-  document.getElementById('c-search').addEventListener('input', filterClientes);
-  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(b => b.classList.remove('active'));
+  var search = document.getElementById('c-search');
+  if (search) search.addEventListener('input', filterClientes);
+
+  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       filterClientes();
     });
@@ -1126,108 +1197,83 @@ function buildClientesTable() {
 }
 
 function renderClientes(rows) {
-  const gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
-  document.getElementById('clientes-tbody').innerHTML = rows.map((r, i) => {
-    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.partner}</a>` : r.partner;
-    return `<tr><td class="num-col">${i+1}</td><td>${r.name}</td><td class="rn-sector">${r.sector}</td><td>${link}</td><td><span class="badge ${gc[r.grade]||''}">${r.grade}</span></td></tr>`;
-  }).join('');
-  document.getElementById('c-count').textContent = rows.length.toLocaleString('es') + ' clientes';
+  var tbody = document.getElementById('clientes-tbody');
+  var countEl = document.getElementById('c-count');
+  if (!tbody) return;
+  var gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var link = r.url
+      ? '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.partner + '</a>'
+      : r.partner;
+    html += '<tr>' +
+      '<td class="num-col">' + (i + 1) + '</td>' +
+      '<td>' + r.name + '</td>' +
+      '<td class="rn-sector">' + r.sector + '</td>' +
+      '<td>' + link + '</td>' +
+      '<td>' + gradeChip(r.grade) + '</td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+  if (countEl) countEl.textContent = rows.length.toLocaleString('es') + ' clientes';
 }
 
 function filterClientes() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  renderClientes(ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  ));
+  var searchEl = document.getElementById('c-search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
+  var activeBtn = document.querySelector('#c-grade-filters .grade-btn.active-all, #c-grade-filters .grade-btn.active-gold, #c-grade-filters .grade-btn.active-silver, #c-grade-filters .grade-btn.active-ready');
+  var grade = (activeBtn && activeBtn.dataset.grade !== 'all') ? activeBtn.dataset.grade : '';
+  renderClientes(ALL_CLIENTS.filter(function(r) {
+    return (!grade || r.grade === grade) &&
+           (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
+                  r.sector.toLowerCase().indexOf(q) >= 0 ||
+                  r.partner.toLowerCase().indexOf(q) >= 0);
+  }));
 }
 
 function exportClientesCSV() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  const rows = ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  );
-  const csv = ['﻿Cliente,Sector,Partner,Nivel',
-    ...rows.map(r => [r.name, r.sector, r.partner, r.grade].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','))
-  ].join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'clientes-odoo-partners.csv'; a.click();
-}
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    
-// ── CLIENTES TAB ────────────────────────────────────────────────────────────
-let ALL_CLIENTS = [];
-
-function buildClientesTable() {
-  ALL_CLIENTS = [];
-  PARTNERS.forEach(p => {
-    (REFS[p.rid] || []).forEach(r => {
-      ALL_CLIENTS.push({ name: r.n, sector: r.s || '—', partner: p.name, grade: p.grade, url: p.url });
-    });
+  var searchEl = document.getElementById('c-search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
+  var activeBtn = document.querySelector('#c-grade-filters .grade-btn.active-all, #c-grade-filters .grade-btn.active-gold, #c-grade-filters .grade-btn.active-silver, #c-grade-filters .grade-btn.active-ready');
+  var grade = (activeBtn && activeBtn.dataset.grade !== 'all') ? activeBtn.dataset.grade : '';
+  var rows = ALL_CLIENTS.filter(function(r) {
+    return (!grade || r.grade === grade) &&
+           (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
+                  r.sector.toLowerCase().indexOf(q) >= 0 ||
+                  r.partner.toLowerCase().indexOf(q) >= 0);
   });
-  ALL_CLIENTS.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
-  renderClientes(ALL_CLIENTS);
-
-  document.getElementById('c-search').addEventListener('input', filterClientes);
-  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterClientes();
-    });
+  var lines = ['﻿Cliente,Sector,Partner,Nivel'];
+  rows.forEach(function(r) {
+    lines.push([r.name, r.sector, r.partner, r.grade].map(function(v) {
+      return '"' + (v || '').replace(/"/g, '""') + '"';
+    }).join(','));
   });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'clientes-odoo-partners.csv';
+  a.click();
 }
 
-function renderClientes(rows) {
-  const gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
-  document.getElementById('clientes-tbody').innerHTML = rows.map((r, i) => {
-    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.partner}</a>` : r.partner;
-    return `<tr><td class="num-col">${i+1}</td><td>${r.name}</td><td class="rn-sector">${r.sector}</td><td>${link}</td><td><span class="badge ${gc[r.grade]||''}">${r.grade}</span></td></tr>`;
-  }).join('');
-  document.getElementById('c-count').textContent = rows.length.toLocaleString('es') + ' clientes';
-}
-
-function filterClientes() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  renderClientes(ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  ));
-}
-
-function exportClientesCSV() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  const rows = ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  );
-  const csv = ['﻿Cliente,Sector,Partner,Nivel',
-    ...rows.map(r => [r.name, r.sector, r.partner, r.grade].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','))
-  ].join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'clientes-odoo-partners.csv'; a.click();
-}
-document.querySelectorAll('.tab-btn').forEach(b => {
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
       b.classList.remove('active');
       b.setAttribute('aria-selected', 'false');
     });
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
-    document.getElementById(btn.dataset.panel).classList.add('active');
+    var panelId = btn.dataset.panel;
+    document.getElementById(panelId).classList.add('active');
+    if (panelId === 'panel-clientes') initClientesTab();
   });
 });
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 buildTable();
 buildRefList();
-buildClientesTable();
+initClientesTab();
 
 // Set initial sort indicator
 document.querySelector('[data-col="refs"]').classList.add('sort-desc');
