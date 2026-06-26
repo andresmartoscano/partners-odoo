@@ -131,20 +131,19 @@ def scrape_partner(slug, idx):
 
     # ── Client reference names (skip first 2 = partner logo images) ───────────
     name_matches = re.findall(r'alt="([^"]+)"\s+loading="lazy"', html)
-    ref_names = name_matches[2:] if len(name_matches) > 2 else []
+    raw_names = name_matches[2:] if len(name_matches) > 2 else []
+    ref_names = [n.strip() for n in raw_names if n.strip()]
 
     # Client sectors (text-bg-secondary badges = reference sector tags)
     ref_sector_matches = re.findall(r'text-bg-secondary">([^<]+)</span>', html)
 
     refs_list = []
     for i, rn in enumerate(ref_names):
-        if not rn.strip():
-            continue
         s = ref_sector_matches[i].strip() if i < len(ref_sector_matches) else ""
-        refs_list.append({"n": rn.strip(), "s": s})
+        refs_list.append({"n": rn, "s": s})
 
-    # Use count from page if refs_list is non-empty and refs==0
-    if refs == 0 and refs_list:
+    # Always use actual extracted count to stay in sync with refs_list
+    if refs_list:
         refs = len(refs_list)
 
     # ── Numeric ID (rid) ──────────────────────────────────────────────────────
