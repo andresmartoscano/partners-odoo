@@ -10,7 +10,7 @@ Se actualiza automáticamente cada noche mediante GitHub Actions.
 ## Datos
 
 - Fuente: [odoo.com/es_ES/partners/country/spain-67](https://www.odoo.com/es_ES/partners/country/spain-67)
-- Actualización: diaria a las 08:00 (Madrid)
+- Actualización: cada 4 horas
 - Contenido: nivel, referencias, retención, expertos certificados y listado de clientes por partner
 
 ## Actualización manual
