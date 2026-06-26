@@ -103,6 +103,6 @@ Luego valida y commitea `index.html` (+ `scraper.py` si lo cambiaste).
 
 ## Estado actual (jun 2026)
 
-- 90 partners · 12 Gold / 5 Silver / 73 Ready.
+- 90 partners · 9 Gold / 33 Silver / 48 Ready.
 - 0 discrepancias entre el contador de referencias y la lista mostrada.
 - Auto-actualización cada 4 h operativa.
