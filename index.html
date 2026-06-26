@@ -713,7 +713,11 @@
     </main>
   </div>
 
+
+</div>
+
 <div id="panel-clientes" class="tab-panel" role="tabpanel">
+  <p id="diag" style="background:red;color:white;padding:1rem;font-size:1.2rem;margin:0">DIAGNÓSTICO: panel visible, JS pendiente...</p>
   <div class="toolbar">
     <span class="toolbar-label">Buscar</span>
     <div class="search-wrap">
@@ -745,7 +749,6 @@
       </table>
     </div>
   </div>
-</div>
 </div>
 
 <script>
@@ -1217,6 +1220,7 @@ function initClientesTab() {
     });
   });
   ALL_CLIENTS.sort(function(a, b) { return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }); });
+  var diag = document.getElementById("diag"); if(diag) diag.textContent = "DIAGNÓSTICO: initClientesTab corrió, clientes: " + ALL_CLIENTS.length;
   renderClientes(ALL_CLIENTS);
 
   var search = document.getElementById('c-search');
