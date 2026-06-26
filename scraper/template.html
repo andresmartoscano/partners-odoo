@@ -1,0 +1,1088 @@
+﻿<title>Partners Odoo España 2026</title>
+<meta name="description" content="Directorio de los 90 partners certificados de Odoo en España con rankings por referencias y retención.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F2F5F8;
+    --surface: #FFFFFF;
+    --nav-bg: #12213A;
+    --nav-text: #C8D8ED;
+    --text-1: #0E1A2B;
+    --text-2: #4A5E78;
+    --text-3: #7A8FA8;
+    --border: #D4DCE8;
+    --row-alt: #F8FAFD;
+    --gold: #8A5C00;
+    --gold-bg: #FFF5E0;
+    --gold-border: #E8C060;
+    --silver: #3D5568;
+    --silver-bg: #EDF1F6;
+    --silver-border: #9BB0C8;
+    --ready: #0B6045;
+    --ready-bg: #E8F5F0;
+    --ready-border: #5DB89A;
+    --accent: #1B4ED8;
+    --accent-light: #EEF3FF;
+    --ret-hi: #0B6045;
+    --ret-mid: #7A5200;
+    --ret-lo: #A8200A;
+    --shadow-sm: 0 1px 3px rgba(14,26,43,.07);
+    --shadow-md: 0 4px 14px rgba(14,26,43,.09);
+    --r: 6px;
+  }
+
+  html { font-size: 14px; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────── */
+  .site-header {
+    background: var(--nav-bg);
+    padding: 0 24px;
+    display: flex;
+    align-items: stretch;
+    gap: 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .site-header .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #FFFFFF;
+    font-size: .9rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    padding: 14px 0;
+    flex-shrink: 0;
+  }
+  .brand-flag { font-size: 1.1rem; }
+  .brand-sep { width: 1px; background: rgba(255,255,255,.15); margin: 10px 0; flex-shrink: 0; }
+
+  .tab-nav {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    flex: 1;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--nav-text);
+    font-size: .82rem;
+    font-weight: 500;
+    letter-spacing: .025em;
+    padding: 0 18px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active { color: #fff; border-bottom-color: #5B9CF6; }
+
+  .header-meta {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    color: var(--text-3);
+    font-size: .76rem;
+    letter-spacing: .01em;
+    flex-shrink: 0;
+    color: rgba(200,216,237,.6);
+  }
+
+  /* ── MAIN CONTENT ────────────────────────────────────── */
+  body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .tab-panel { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+  .tab-panel.active { display: flex; }
+
+  /* ── TOOLBAR ─────────────────────────────────────────── */
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .toolbar-label {
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 180px;
+    max-width: 280px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 7px 10px 7px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-size: .82rem;
+    background: var(--bg);
+    color: var(--text-1);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .grade-filters { display: flex; gap: 6px; }
+  .grade-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid transparent;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text-2);
+    transition: all .15s;
+    letter-spacing: .01em;
+  }
+  .grade-btn:hover { background: #e8eef4; }
+  .grade-btn.active-all { background: var(--text-1); color: #fff; border-color: var(--text-1); }
+  .grade-btn.active-gold { background: var(--gold-bg); color: var(--gold); border-color: var(--gold-border); }
+  .grade-btn.active-silver { background: var(--silver-bg); color: var(--silver); border-color: var(--silver-border); }
+  .grade-btn.active-ready { background: var(--ready-bg); color: var(--ready); border-color: var(--ready-border); }
+
+  .spacer { flex: 1; }
+  .count-badge {
+    font-size: .76rem;
+    color: var(--text-3);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--r);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: .02em;
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .export-btn:hover { background: #1640B8; }
+
+  /* ── TABLE ───────────────────────────────────────────── */
+  .table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    min-height: 0;
+  }
+  .table-inner { padding: 0 24px 24px; min-width: 900px; }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .82rem;
+  }
+  thead th {
+    background: var(--surface);
+    border-bottom: 2px solid var(--border);
+    border-top: 1px solid var(--border);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  thead th.sortable { cursor: pointer; user-select: none; }
+  thead th.sortable:hover { color: var(--text-1); }
+  thead th .sort-icon { margin-left: 5px; opacity: .35; font-style: normal; font-size: .75rem; }
+  thead th.sort-asc .sort-icon, thead th.sort-desc .sort-icon { opacity: 1; color: var(--accent); }
+  thead th.num { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--accent-light); }
+  tbody tr.hidden { display: none; }
+
+  td {
+    padding: 10px 12px;
+    color: var(--text-1);
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+  }
+  td.num { text-align: right; }
+  td.muted { color: var(--text-3); }
+
+  /* tier accent bar */
+  td.tier-cell { padding-left: 0; }
+  .tier-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tier-stripe {
+    width: 3px;
+    height: 34px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .grade-gold .tier-stripe { background: var(--gold-border); }
+  .grade-silver .tier-stripe { background: var(--silver-border); }
+  .grade-ready .tier-stripe { background: var(--ready-border); }
+
+  .grade-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  .chip-gold { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
+  .chip-silver { background: var(--silver-bg); color: var(--silver); border: 1px solid var(--silver-border); }
+  .chip-ready { background: var(--ready-bg); color: var(--ready); border: 1px solid var(--ready-border); }
+
+  .partner-name-cell { max-width: 240px; }
+  .partner-name {
+    font-weight: 500;
+    color: var(--text-1);
+    line-height: 1.3;
+  }
+  .partner-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  .partner-link:hover .partner-name { color: var(--accent); text-decoration: underline; }
+
+  /* retention cell */
+  .ret-cell { white-space: nowrap; }
+  .ret-val {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .ret-hi { color: var(--ret-hi); }
+  .ret-mid { color: var(--ret-mid); }
+  .ret-lo { color: var(--ret-lo); }
+
+  /* refs cell */
+  .refs-val { font-weight: 700; font-size: .88rem; }
+
+  /* sectors tags */
+  .sector-tags { display: flex; flex-wrap: wrap; gap: 4px; max-width: 260px; }
+  .sector-tag {
+    font-size: .68rem;
+    background: #EDF1F7;
+    color: var(--text-2);
+    border-radius: 3px;
+    padding: 1px 6px;
+    white-space: nowrap;
+  }
+  .sector-count {
+    font-weight: 700;
+    color: var(--text-1);
+    margin-right: 2px;
+  }
+
+  /* experts cell */
+  .experts-val { color: var(--text-2); }
+
+  /* ── EMPTY STATE ─────────────────────────────────────── */
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-3);
+  }
+  .empty-state svg { margin-bottom: 12px; opacity: .4; }
+  .empty-state p { font-size: .9rem; }
+
+  /* ── TAB 2: REFERENCIAS ──────────────────────────────── */
+  .ref-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ref-sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .ref-sidebar-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .ref-sidebar-header h2 {
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 10px;
+  }
+  .ref-search {
+    position: relative;
+  }
+  .ref-search svg {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    pointer-events: none;
+  }
+  .ref-search-input {
+    width: 100%;
+    padding: 7px 10px 7px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-size: .8rem;
+    background: var(--surface);
+    color: var(--text-1);
+    outline: none;
+  }
+  .ref-search-input:focus { border-color: var(--accent); }
+
+  .ref-partner-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+  .ref-partner-item {
+    padding: 9px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 3px solid transparent;
+    transition: background .1s, border-color .1s;
+  }
+  .ref-partner-item:hover { background: var(--row-alt); }
+  .ref-partner-item.selected { background: var(--accent-light); border-left-color: var(--accent); }
+  .ref-partner-item.hidden { display: none; }
+  .ref-item-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-gold { background: var(--gold-border); }
+  .dot-silver { background: var(--silver-border); }
+  .dot-ready { background: var(--ready-border); }
+  .ref-item-name {
+    font-size: .79rem;
+    color: var(--text-1);
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+  }
+  .ref-item-refs {
+    font-size: .72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  /* Detail panel */
+  .ref-detail {
+    overflow-y: auto;
+    padding: 32px 40px;
+    background: var(--bg);
+  }
+  .ref-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-3);
+    text-align: center;
+    gap: 12px;
+  }
+  .ref-empty svg { opacity: .25; }
+  .ref-empty p { font-size: .9rem; max-width: 280px; }
+
+  .ref-detail-content { display: none; }
+  .ref-detail-content.visible { display: block; }
+
+  .ref-detail-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-detail-grade { margin-bottom: 8px; }
+  .ref-detail-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-1);
+    line-height: 1.3;
+    margin-bottom: 14px;
+    text-wrap: balance;
+  }
+  .ref-metrics {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .ref-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ref-metric-val {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-1);
+    line-height: 1;
+  }
+  .ref-metric-label {
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .ref-sectors-section h3 {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 16px;
+  }
+  .sector-bar-list { display: flex; flex-direction: column; gap: 10px; max-width: 560px; }
+  .sector-bar-item { display: flex; flex-direction: column; gap: 5px; }
+  .sector-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: .8rem;
+    color: var(--text-1);
+  }
+  .sector-bar-label-name { font-weight: 500; }
+  .sector-bar-label-count { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .sector-bar-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .sector-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+  }
+  .sector-tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sector-tag-lg {
+    padding: 5px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    font-size: .8rem;
+    color: var(--text-2);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ── REFS NAME LIST ─────────────────────────────────── */
+  .ref-names-section { margin-top: 28px; }
+  .ref-names-section h3 {
+    font-size: .72rem; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--text-3); margin-bottom: 14px;
+  }
+  .ref-names-search-wrap { position: relative; max-width: 320px; margin-bottom: 14px; }
+  .ref-names-search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+  .ref-names-search { width: 100%; padding: 6px 10px 6px 30px; border: 1px solid var(--border); border-radius: var(--r); font-size: .8rem; background: var(--surface); color: var(--text-1); outline: none; }
+  .ref-names-search:focus { border-color: var(--accent); }
+  .ref-names-table-wrap { overflow-x: auto; }
+  .ref-names-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  .ref-names-table thead th { background: var(--bg); border-bottom: 2px solid var(--border); padding: 7px 10px; text-align: left; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); white-space: nowrap; position: sticky; top: 0; }
+  .ref-names-table tbody tr { border-bottom: 1px solid var(--border); }
+  .ref-names-table tbody tr:hover { background: var(--accent-light); }
+  .ref-names-table tbody tr.rn-hidden { display: none; }
+  .ref-names-table td { padding: 7px 10px; color: var(--text-1); }
+  .ref-names-table td.rn-num { color: var(--text-3); font-variant-numeric: tabular-nums; text-align: right; width: 36px; }
+  .ref-names-table td.rn-sector { color: var(--text-2); font-size: .75rem; }
+  .ref-names-count { font-size: .73rem; color: var(--text-3); margin-bottom: 10px; }
+
+  .ref-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #FFF8E8;
+    border: 1px solid #E8C060;
+    border-radius: var(--r);
+    padding: 10px 14px;
+    font-size: .78rem;
+    color: #6B4A00;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .ref-notice svg { flex-shrink: 0; margin-top: 1px; color: #B8830A; }
+
+  .ref-odoo-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 24px;
+    color: var(--accent);
+    font-size: .8rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 7px 14px;
+    border: 1.5px solid var(--accent);
+    border-radius: var(--r);
+    transition: background .15s;
+  }
+  .ref-odoo-link:hover { background: var(--accent-light); }
+
+
+  /* ref tab toolbar */
+  .ref-toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .ref-grade-filters { display: flex; gap: 5px; }
+
+  /* Scrollbar styling */
+  .ref-partner-list::-webkit-scrollbar,
+  .ref-detail::-webkit-scrollbar { width: 6px; }
+  .ref-partner-list::-webkit-scrollbar-track,
+  .ref-detail::-webkit-scrollbar-track { background: transparent; }
+  .ref-partner-list::-webkit-scrollbar-thumb,
+  .ref-detail::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 700px) {
+    .ref-layout { grid-template-columns: 1fr; }
+    .ref-sidebar { height: 280px; }
+    .ref-detail { padding: 20px; }
+  }
+</style>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="brand">
+    <span class="brand-flag">🇪🇸</span>
+    Partners Odoo España
+  </div>
+  <div class="brand-sep"></div>
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" role="tab" data-panel="panel-partners" aria-selected="true">Listado de Partners</button>
+    <button class="tab-btn" role="tab" data-panel="panel-referencias" aria-selected="false">Referencias por Partner</button>
+  </nav>
+  <span class="header-meta">90 partners · jun 2026 · fuente: odoo.com</span>
+</header>
+
+<!-- TAB 1: PARTNERS -->
+<div id="panel-partners" class="tab-panel active" role="tabpanel">
+  <div class="toolbar">
+    <span class="toolbar-label">Filtrar</span>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input class="search-input" id="p-search" type="search" placeholder="Buscar partner…" autocomplete="off">
+    </div>
+    <div class="grade-filters">
+      <button class="grade-btn active-all" data-grade="all">Todos</button>
+      <button class="grade-btn" data-grade="Gold">Gold</button>
+      <button class="grade-btn" data-grade="Silver">Silver</button>
+      <button class="grade-btn" data-grade="Ready">Ready</button>
+    </div>
+    <div class="spacer"></div>
+    <span class="count-badge" id="p-count">90 partners</span>
+    <button class="export-btn" id="export-partners">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+
+  <div class="table-wrap">
+   <div class="table-inner">
+    <table id="partners-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="grade">Nivel <i class="sort-icon">↕</i></th>
+          <th class="sortable" data-col="name">Partner <i class="sort-icon">↕</i></th>
+          <th class="sortable num" data-col="refs">Referencias <i class="sort-icon">↕</i></th>
+          <th class="sortable num" data-col="retention">Retención <i class="sort-icon">↕</i></th>
+          <th class="sortable num" data-col="avgUsers">Proy. medio <i class="sort-icon">↕</i></th>
+          <th class="sortable num" data-col="largeUsers">Proy. grande <i class="sort-icon">↕</i></th>
+          <th class="sortable num" data-col="experts">Expertos cert. <i class="sort-icon">↕</i></th>
+          <th>Sectores principales</th>
+        </tr>
+      </thead>
+      <tbody id="p-tbody"></tbody>
+    </table>
+    <div class="empty-state" id="p-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <p>No hay partners que coincidan con la búsqueda.</p>
+    </div>
+   </div>
+  </div>
+</div>
+
+<!-- TAB 2: REFERENCIAS -->
+<div id="panel-referencias" class="tab-panel" role="tabpanel">
+  <div class="ref-toolbar">
+    <span class="toolbar-label">Filtrar nivel</span>
+    <div class="ref-grade-filters">
+      <button class="grade-btn active-all" data-ref-grade="all">Todos</button>
+      <button class="grade-btn" data-ref-grade="Gold">Gold</button>
+      <button class="grade-btn" data-ref-grade="Silver">Silver</button>
+      <button class="grade-btn" data-ref-grade="Ready">Ready</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="export-btn" id="export-refs">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="ref-layout">
+    <aside class="ref-sidebar">
+      <div class="ref-sidebar-header">
+        <h2>Selecciona un partner</h2>
+        <div class="ref-search">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <input class="ref-search-input" id="ref-search" type="search" placeholder="Buscar…" autocomplete="off">
+        </div>
+      </div>
+      <div class="ref-partner-list" id="ref-partner-list"></div>
+    </aside>
+    <main class="ref-detail" id="ref-detail">
+      <div class="ref-empty" id="ref-empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 8h10M7 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <p>Selecciona un partner para ver su desglose por sector.</p>
+        <p style="font-size:.72rem;margin-top:4px;color:var(--text-3)">Selecciona un partner para ver su distribución por sector y el listado completo de sus clientes.</p>
+      </div>
+      <div class="ref-detail-content" id="ref-detail-content"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+__PARTNERS_DATA__
+__REFS_DATA__
+  const uid = 'rn_' + rid;
+  const rows = refs.map((r, i) => {
+    const sector = r.s ? `<td class="rn-sector">${r.s}</td>` : '<td class="rn-sector">—</td>';
+    return `<tr data-name="${r.n.toLowerCase()}"><td class="rn-num">${i+1}</td><td>${r.n}</td>${sector}</tr>`;
+  }).join('');
+  return `
+    <div class="ref-names-section" id="${uid}">
+      <h3>Clientes / Referencias (${refs.length})</h3>
+      <div class="ref-names-search-wrap">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input class="ref-names-search" type="search" placeholder="Buscar cliente…" oninput="filterRefNames(this,'${uid}')">
+      </div>
+      <p class="ref-names-count" id="${uid}_count">${refs.length} clientes</p>
+      <div class="ref-names-table-wrap">
+        <table class="ref-names-table">
+          <thead><tr><th style="width:36px">#</th><th>Empresa</th><th>Sector</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function filterRefNames(input, uid) {
+  const q = input.value.toLowerCase().trim();
+  const section = document.getElementById(uid);
+  if (!section) return;
+  let vis = 0;
+  section.querySelectorAll('.ref-names-table tbody tr').forEach((tr, i) => {
+    const match = !q || tr.dataset.name.includes(q);
+    tr.classList.toggle('rn-hidden', !match);
+    if (match) { vis++; tr.querySelector('.rn-num').textContent = vis; }
+  });
+  const countEl = document.getElementById(uid + '_count');
+  if (countEl) countEl.textContent = (q ? vis + ' resultado' + (vis !== 1 ? 's' : '') : vis + ' clientes');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function retClass(v) {
+  if (v === null) return '';
+  if (v >= 93) return 'ret-hi';
+  if (v >= 85) return 'ret-mid';
+  return 'ret-lo';
+}
+function gradeChip(g) {
+  const map = { Gold: 'chip-gold', Silver: 'chip-silver', Ready: 'chip-ready' };
+  return `<span class="grade-chip ${map[g]}">${g}</span>`;
+}
+function dotClass(g) {
+  return { Gold: 'dot-gold', Silver: 'dot-silver', Ready: 'dot-ready' }[g];
+}
+function fmt(v, suffix='') { return v !== null && v !== undefined ? v + suffix : '—'; }
+function escape(s) { return s.replace(/[",\n\r]/g, m => m === '"' ? '""' : ' '); }
+
+// ── BUILD TABLE ────────────────────────────────────────────────────────────
+let sortCol = 'refs', sortDir = -1;
+let filterGrade = 'all', searchQ = '';
+
+function buildTable() {
+  const tbody = document.getElementById('p-tbody');
+  let data = PARTNERS.slice().sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === null) av = -Infinity;
+    if (bv === null) bv = -Infinity;
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv, 'es');
+    return sortDir * (av - bv);
+  });
+  tbody.innerHTML = '';
+  data.forEach(p => {
+    const visible = (filterGrade === 'all' || p.grade === filterGrade) &&
+      (!searchQ || p.name.toLowerCase().includes(searchQ));
+    const sectorHtml = p.sectors.length === 0
+      ? '<span class="muted" style="font-size:.75rem">—</span>'
+      : p.sectors.slice(0, 3).map(([n, c]) =>
+          `<span class="sector-tag">${c !== null ? `<span class="sector-count">${c}</span>` : ''}${n}</span>`
+        ).join('');
+    const nameCell = p.url
+      ? `<a class="partner-link" href="${p.url}" target="_blank" rel="noopener"><span class="partner-name">${p.name}</span></a>`
+      : `<span class="partner-name">${p.name}</span>`;
+    const tr = document.createElement('tr');
+    tr.className = `grade-${p.grade.toLowerCase()}${visible ? '' : ' hidden'}`;
+    tr.dataset.grade = p.grade;
+    tr.dataset.name = p.name.toLowerCase();
+    tr.innerHTML = `
+      <td class="tier-cell">
+        <div class="tier-bar">
+          <div class="tier-stripe"></div>
+          ${gradeChip(p.grade)}
+        </div>
+      </td>
+      <td class="partner-name-cell">${nameCell}</td>
+      <td class="num"><strong class="refs-val">${p.refs}</strong></td>
+      <td class="num ret-cell"><span class="ret-val ${retClass(p.retention)}">${fmt(p.retention, '%')}</span></td>
+      <td class="num">${fmt(p.avgUsers, ' us.')}</td>
+      <td class="num">${p.largeUsers ? '~' + p.largeUsers + ' us.' : '—'}</td>
+      <td class="num experts-val">${p.experts}</td>
+      <td><div class="sector-tags">${sectorHtml}</div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  updateCount();
+}
+
+function updateCount() {
+  const rows = document.querySelectorAll('#p-tbody tr:not(.hidden)');
+  document.getElementById('p-count').textContent = rows.length + ' partners';
+  document.getElementById('p-empty').style.display = rows.length === 0 ? 'block' : 'none';
+}
+
+function applyFilters() {
+  const rows = document.querySelectorAll('#p-tbody tr');
+  rows.forEach(tr => {
+    const gradeOk = filterGrade === 'all' || tr.dataset.grade === filterGrade;
+    const nameOk = !searchQ || tr.dataset.name.includes(searchQ);
+    tr.classList.toggle('hidden', !(gradeOk && nameOk));
+  });
+  updateCount();
+}
+
+// Sorting
+document.querySelectorAll('thead th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) { sortDir *= -1; }
+    else { sortCol = col; sortDir = -1; }
+    document.querySelectorAll('thead th').forEach(h => {
+      h.classList.remove('sort-asc', 'sort-desc');
+    });
+    th.classList.add(sortDir === -1 ? 'sort-desc' : 'sort-asc');
+    buildTable();
+    applyFilters();
+  });
+});
+
+// Grade filter
+document.querySelectorAll('.grade-filters .grade-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterGrade = btn.dataset.grade;
+    document.querySelectorAll('.grade-filters .grade-btn').forEach(b => {
+      b.className = 'grade-btn';
+    });
+    btn.classList.add(filterGrade === 'all' ? 'active-all' :
+      filterGrade === 'Gold' ? 'active-gold' :
+      filterGrade === 'Silver' ? 'active-silver' : 'active-ready');
+    applyFilters();
+  });
+});
+
+// Search
+document.getElementById('p-search').addEventListener('input', e => {
+  searchQ = e.target.value.toLowerCase().trim();
+  applyFilters();
+});
+
+// ── CSV EXPORT: PARTNERS ───────────────────────────────────────────────────
+document.getElementById('export-partners').addEventListener('click', () => {
+  const visible = PARTNERS.filter(p =>
+    (filterGrade === 'all' || p.grade === filterGrade) &&
+    (!searchQ || p.name.toLowerCase().includes(searchQ))
+  ).sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (av === null) av = -Infinity;
+    if (bv === null) bv = -Infinity;
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv, 'es');
+    return sortDir * (av - bv);
+  });
+  const cols = ['Nivel','Partner','Referencias','Retención (%)','Proy. medio (us.)','Proy. grande (~us.)','Expertos cert.','Sector 1','Sector 2','Sector 3'];
+  const rows = visible.map(p => [
+    p.grade,
+    `"${escape(p.name)}"`,
+    p.refs,
+    p.retention ?? '',
+    p.avgUsers ?? '',
+    p.largeUsers ?? '',
+    p.experts,
+    p.sectors[0]?.[0] ?? '',
+    p.sectors[1]?.[0] ?? '',
+    p.sectors[2]?.[0] ?? '',
+  ]);
+  const csv = [cols.join(','), ...rows.map(r => r.join(','))].join('\n');
+  downloadCsv(csv, 'partners-odoo-espana.csv');
+});
+
+// ── TAB 2: REFERENCIAS ─────────────────────────────────────────────────────
+let refFilterGrade = 'all', refSearch = '', selectedId = null;
+
+function buildRefList() {
+  const list = document.getElementById('ref-partner-list');
+  list.innerHTML = '';
+  PARTNERS.forEach(p => {
+    const visible = (refFilterGrade === 'all' || p.grade === refFilterGrade) &&
+      (!refSearch || p.name.toLowerCase().includes(refSearch));
+    const item = document.createElement('div');
+    item.className = `ref-partner-item${visible ? '' : ' hidden'}${selectedId === p.id ? ' selected' : ''}`;
+    item.dataset.id = p.id;
+    item.dataset.name = p.name.toLowerCase();
+    item.dataset.grade = p.grade;
+    item.innerHTML = `
+      <div class="ref-item-dot ${dotClass(p.grade)}"></div>
+      <span class="ref-item-name">${p.name}</span>
+      <span class="ref-item-refs">${p.refs}</span>
+    `;
+    item.addEventListener('click', () => selectPartner(p.id));
+    list.appendChild(item);
+  });
+}
+
+function selectPartner(id) {
+  selectedId = id;
+  document.querySelectorAll('.ref-partner-item').forEach(el => {
+    el.classList.toggle('selected', parseInt(el.dataset.id) === id);
+  });
+  const p = PARTNERS.find(x => x.id === id);
+  renderDetail(p);
+}
+
+function renderDetail(p) {
+  document.getElementById('ref-empty-state').style.display = 'none';
+  const content = document.getElementById('ref-detail-content');
+  content.classList.add('visible');
+
+  const retHtml = p.retention !== null
+    ? `<div class="ref-metric"><div class="ref-metric-val ${retClass(p.retention)}">${p.retention}%</div><div class="ref-metric-label">Retención</div></div>`
+    : '';
+  const avgHtml = p.avgUsers !== null
+    ? `<div class="ref-metric"><div class="ref-metric-val">${p.avgUsers}</div><div class="ref-metric-label">Us. proy. medio</div></div>`
+    : '';
+  const largeHtml = p.largeUsers !== null
+    ? `<div class="ref-metric"><div class="ref-metric-val">~${p.largeUsers}</div><div class="ref-metric-label">Us. proy. grande</div></div>`
+    : '';
+
+  let sectorsHtml = '';
+  if (p.sectors.length === 0) {
+    sectorsHtml = '<p style="color:var(--text-3);font-size:.82rem">No hay datos de sectores disponibles para este partner.</p>';
+  } else {
+    const hasCount = p.sectors.some(([, c]) => c !== null);
+    if (hasCount) {
+      const maxCount = Math.max(...p.sectors.map(([, c]) => c || 0));
+      sectorsHtml = `<div class="sector-bar-list">${p.sectors.map(([name, count]) => `
+        <div class="sector-bar-item">
+          <div class="sector-bar-label">
+            <span class="sector-bar-label-name">${name}</span>
+            <span class="sector-bar-label-count">${count} referencias</span>
+          </div>
+          <div class="sector-bar-track">
+            <div class="sector-bar-fill" style="width:${Math.round((count/maxCount)*100)}%"></div>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    } else {
+      sectorsHtml = `<div class="sector-tag-list">${p.sectors.map(([name]) =>
+        `<span class="sector-tag-lg">${name}</span>`
+      ).join('')}</div>`;
+    }
+  }
+
+  const profileUrl = p.url || `https://www.odoo.com/partners/country/spain-67`;
+  const linkLabel = p.url ? 'Ver perfil y nombres de clientes en odoo.com' : 'Ver partners en odoo.com';
+
+  content.innerHTML = `
+    <div class="ref-detail-header">
+      <div class="ref-detail-grade">${gradeChip(p.grade)}</div>
+      <h2 class="ref-detail-name">${p.name}</h2>
+      <div class="ref-metrics">
+        <div class="ref-metric">
+          <div class="ref-metric-val">${p.refs}</div>
+          <div class="ref-metric-label">Referencias</div>
+        </div>
+        ${retHtml}
+        <div class="ref-metric">
+          <div class="ref-metric-val">${p.experts}</div>
+          <div class="ref-metric-label">Expertos cert.</div>
+        </div>
+        ${avgHtml}${largeHtml}
+      </div>
+    </div>
+    <div class="ref-sectors-section">
+      <h3>Distribución por sector${p.sectors.some(([,c])=>c!==null) ? ' (con conteo exacto)' : ' (top 3)'}</h3>
+      ${sectorsHtml}
+    </div>
+    <a class="ref-odoo-link" href="${profileUrl}" target="_blank" rel="noopener">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M6 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-3M10 2h4m0 0v4m0-4L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ${linkLabel}
+    </a>
+    ${buildRefNamesList(p.rid)}
+  `;
+}
+
+// Ref grade filter
+document.querySelectorAll('.ref-grade-filters .grade-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    refFilterGrade = btn.dataset.refGrade;
+    document.querySelectorAll('.ref-grade-filters .grade-btn').forEach(b => { b.className = 'grade-btn'; });
+    btn.classList.add(refFilterGrade === 'all' ? 'active-all' :
+      refFilterGrade === 'Gold' ? 'active-gold' :
+      refFilterGrade === 'Silver' ? 'active-silver' : 'active-ready');
+    document.querySelectorAll('.ref-partner-item').forEach(el => {
+      const gradeOk = refFilterGrade === 'all' || el.dataset.grade === refFilterGrade;
+      const nameOk = !refSearch || el.dataset.name.includes(refSearch);
+      el.classList.toggle('hidden', !(gradeOk && nameOk));
+    });
+  });
+});
+
+// Ref search
+document.getElementById('ref-search').addEventListener('input', e => {
+  refSearch = e.target.value.toLowerCase().trim();
+  document.querySelectorAll('.ref-partner-item').forEach(el => {
+    const gradeOk = refFilterGrade === 'all' || el.dataset.grade === refFilterGrade;
+    const nameOk = !refSearch || el.dataset.name.includes(refSearch);
+    el.classList.toggle('hidden', !(gradeOk && nameOk));
+  });
+});
+
+// ── CSV EXPORT: REFERENCIAS ────────────────────────────────────────────────
+document.getElementById('export-refs').addEventListener('click', () => {
+  const visible = PARTNERS.filter(p =>
+    (refFilterGrade === 'all' || p.grade === refFilterGrade) &&
+    (!refSearch || p.name.toLowerCase().includes(refSearch))
+  );
+  const cols = ['Partner','Nivel','Referencias','Retención (%)','Expertos cert.','Sector 1','Refs S1','Sector 2','Refs S2','Sector 3','Refs S3'];
+  const rows = visible.map(p => [
+    `"${escape(p.name)}"`,
+    p.grade,
+    p.refs,
+    p.retention ?? '',
+    p.experts,
+    p.sectors[0]?.[0] ?? '',
+    p.sectors[0]?.[1] ?? '',
+    p.sectors[1]?.[0] ?? '',
+    p.sectors[1]?.[1] ?? '',
+    p.sectors[2]?.[0] ?? '',
+    p.sectors[2]?.[1] ?? '',
+  ]);
+  const csv = [cols.join(','), ...rows.map(r => r.join(','))].join('\n');
+  downloadCsv(csv, 'referencias-odoo-espana.csv');
+});
+
+// ── DOWNLOAD HELPER ────────────────────────────────────────────────────────
+function downloadCsv(content, filename) {
+  const bom = '﻿'; // UTF-8 BOM for Excel
+  const blob = new Blob([bom + content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── TAB SWITCHING ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    document.getElementById(btn.dataset.panel).classList.add('active');
+  });
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+buildTable();
+buildRefList();
+
+// Set initial sort indicator
+document.querySelector('[data-col="refs"]').classList.add('sort-desc');
+</script>
