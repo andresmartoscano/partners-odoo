@@ -129,10 +129,16 @@ def scrape_partner(slug, idx):
     sector_raw = re.findall(r'text-bg-(?:primary|info|warning|success|danger)">([^<]+)</span>', html)
     sectors = [[s.strip(), None] for s in dict.fromkeys(sector_raw) if s.strip()]
 
-    # ── Client reference names (skip first 2 = partner logo images) ───────────
-    name_matches = re.findall(r'alt="([^"]+)"\s+loading="lazy"', html)
-    raw_names = name_matches[2:] if len(name_matches) > 2 else []
-    ref_names = [n.strip() for n in raw_names if n.strip()]
+    # ── Client reference names ────────────────────────────────────────────────
+    # Partner logo uses avatar_1920; client reference logos use avatar_128.
+    # Using avatar_128 is more reliable than loading="lazy" (not always present).
+    ref_names = []
+    for tag in re.findall(r'<img[^>]+>', html):
+        if 'avatar_128' not in tag:
+            continue
+        alt_m = re.search(r'alt="([^"]+)"', tag)
+        if alt_m and alt_m.group(1).strip():
+            ref_names.append(alt_m.group(1).strip())
 
     # Client sectors (text-bg-secondary badges = reference sector tags)
     ref_sector_matches = re.findall(r'text-bg-secondary">([^<]+)</span>', html)
