@@ -2,8 +2,8 @@ name: Update Partner Dashboard
 
 on:
   schedule:
-    # Every day at 06:00 UTC (08:00 Madrid)
-    - cron: '0 6 * * *'
+    # Every 4 hours
+    - cron: '0 */4 * * *'
   workflow_dispatch:  # allow manual trigger from GitHub UI
 
 jobs:
