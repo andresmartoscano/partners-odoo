@@ -717,18 +717,17 @@
 </div>
 
 <div id="panel-clientes" class="tab-panel" role="tabpanel">
-  <p id="diag" style="background:red;color:white;padding:1rem;font-size:1.2rem;margin:0">DIAGNÓSTICO: panel visible, JS pendiente...</p>
   <div class="toolbar">
     <span class="toolbar-label">Buscar</span>
     <div class="search-wrap">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <input class="search-input" id="c-search" type="search" placeholder="Cliente, sector o partner...">
     </div>
-    <div class="ref-grade-filters">
-      <button class="ref-grade-filter active" data-grade="">Todos</button>
-      <button class="ref-grade-filter" data-grade="Gold">Gold</button>
-      <button class="ref-grade-filter" data-grade="Silver">Silver</button>
-      <button class="ref-grade-filter" data-grade="Ready">Ready</button>
+    <div class="grade-filters" id="c-grade-filters">
+      <button class="grade-btn active-all" data-grade="all">Todos</button>
+      <button class="grade-btn" data-grade="Gold">Gold</button>
+      <button class="grade-btn" data-grade="Silver">Silver</button>
+      <button class="grade-btn" data-grade="Ready">Ready</button>
     </div>
     <button class="csv-btn" onclick="exportClientesCSV()">Exportar CSV</button>
     <span id="c-count" style="margin-left:auto;color:var(--muted);font-size:.8rem;white-space:nowrap"></span>
@@ -1220,7 +1219,6 @@ function initClientesTab() {
     });
   });
   ALL_CLIENTS.sort(function(a, b) { return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }); });
-  var diag = document.getElementById("diag"); if(diag) diag.textContent = "DIAGNÓSTICO: initClientesTab corrió, clientes: " + ALL_CLIENTS.length;
   renderClientes(ALL_CLIENTS);
 
   var search = document.getElementById('c-search');
@@ -1251,7 +1249,7 @@ function renderClientes(rows) {
       '<td>' + r.name + '</td>' +
       '<td class="rn-sector">' + r.sector + '</td>' +
       '<td>' + link + '</td>' +
-      '<td><span class="badge ' + (gc[r.grade] || '') + '">' + r.grade + '</span></td>' +
+      '<td>' + gradeChip(r.grade) + '</td>' +
       '</tr>';
   }
   tbody.innerHTML = html;
@@ -1261,8 +1259,8 @@ function renderClientes(rows) {
 function filterClientes() {
   var searchEl = document.getElementById('c-search');
   var q = searchEl ? searchEl.value.toLowerCase() : '';
-  var activeBtn = document.querySelector('#panel-clientes .ref-grade-filter.active');
-  var grade = activeBtn ? (activeBtn.dataset.grade || '') : '';
+  var activeBtn = document.querySelector('#c-grade-filters .grade-btn.active-all, #c-grade-filters .grade-btn.active-gold, #c-grade-filters .grade-btn.active-silver, #c-grade-filters .grade-btn.active-ready');
+  var grade = (activeBtn && activeBtn.dataset.grade !== 'all') ? activeBtn.dataset.grade : '';
   renderClientes(ALL_CLIENTS.filter(function(r) {
     return (!grade || r.grade === grade) &&
            (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
@@ -1274,8 +1272,8 @@ function filterClientes() {
 function exportClientesCSV() {
   var searchEl = document.getElementById('c-search');
   var q = searchEl ? searchEl.value.toLowerCase() : '';
-  var activeBtn = document.querySelector('#panel-clientes .ref-grade-filter.active');
-  var grade = activeBtn ? (activeBtn.dataset.grade || '') : '';
+  var activeBtn = document.querySelector('#c-grade-filters .grade-btn.active-all, #c-grade-filters .grade-btn.active-gold, #c-grade-filters .grade-btn.active-silver, #c-grade-filters .grade-btn.active-ready');
+  var grade = (activeBtn && activeBtn.dataset.grade !== 'all') ? activeBtn.dataset.grade : '';
   var rows = ALL_CLIENTS.filter(function(r) {
     return (!grade || r.grade === grade) &&
            (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
