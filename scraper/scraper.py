@@ -9,6 +9,7 @@ import re
 import time
 import os
 import sys
+import html as ihtml
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -46,8 +47,11 @@ def scrape_slugs():
         url = LISTING_BASE if page == 1 else f"{LISTING_BASE}?page={page}"
         print(f"  Listing page {page}: {url}")
         html = get(url, delay=2)
-        # Allow any URL-safe chars in slug, not just lowercase
-        found = re.findall(r'href="(/es_ES/partners/[^"?#]+?-\d+)"', html)
+        # Partner detail links look like /es_ES/partners/<slug>-<id>?country_id=67
+        # The slug itself contains no slash; filter links (/partners/country/...,
+        # /partners/grade/...) DO contain slashes, so excluding '/' rejects them.
+        # The id is followed by a query string ('?') or the closing quote.
+        found = re.findall(r'href="(/es_ES/partners/[^"/?#]+?-\d+)(?:\?|")', html)
         for s in found:
             if s not in seen:
                 seen.add(s)
@@ -130,24 +134,29 @@ def scrape_partner(slug, idx):
     sector_raw = re.findall(r'text-bg-(?:primary|info|warning|success|danger)">([^<]+)</span>', html)
     sectors = [[s.strip(), None] for s in dict.fromkeys(sector_raw) if s.strip()]
 
-    # ── Client reference names ────────────────────────────────────────────────
-    # Partner logo uses avatar_1920; client reference logos use avatar_128.
-    # Using avatar_128 is more reliable than loading="lazy" (not always present).
-    ref_names = []
-    for tag in re.findall(r'<img[^>]+>', html):
-        if 'avatar_128' not in tag:
-            continue
-        alt_m = re.search(r'alt="([^"]+)"', tag)
-        if alt_m and alt_m.group(1).strip():
-            ref_names.append(alt_m.group(1).strip())
-
-    # Client sectors (text-bg-secondary badges = reference sector tags)
-    ref_sector_matches = re.findall(r'text-bg-secondary">([^<]+)</span>', html)
-
+    # ── Client reference names + sectors ──────────────────────────────────────
+    # Each client reference is rendered as a card containing an anchor
+    #   <a href="/es_ES/customers/<slug>-<id>"><span>CLIENT NAME</span></a>
+    # optionally followed (within the same card) by a sector badge
+    #   <span class="badge ms-1 text-bg-secondary">SECTOR</span>
+    #
+    # The old approach keyed off the avatar_128 <img> and its alt attribute. That
+    # missed any reference whose avatar tag was absent/different at scrape time,
+    # so the captured name count came up short (typically by 1). The customer
+    # anchor is always present for every reference, so we key off it instead and
+    # bound each reference's sector lookup to the slice before the next anchor.
     refs_list = []
-    for i, rn in enumerate(ref_names):
-        s = ref_sector_matches[i].strip() if i < len(ref_sector_matches) else ""
-        refs_list.append({"n": rn, "s": s})
+    anchors = list(re.finditer(r'<a\s+href="/es_ES/customers/[^"]+"\s*>(.*?)</a>', html, re.DOTALL))
+    for idx, a in enumerate(anchors):
+        name = re.sub(r'<[^>]+>', '', a.group(1))      # strip any nested tags
+        name = ihtml.unescape(name).strip()
+        if not name:
+            continue
+        start = a.end()
+        end = anchors[idx + 1].start() if idx + 1 < len(anchors) else len(html)
+        s_m = re.search(r'text-bg-secondary">([^<]+)</span>', html[start:end])
+        s = ihtml.unescape(s_m.group(1)).strip() if s_m else ""
+        refs_list.append({"n": name, "s": s})
 
     # Always use actual extracted count to stay in sync with refs_list
     if refs_list:
