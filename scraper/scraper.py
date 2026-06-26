@@ -38,101 +38,107 @@ def get(url, retries=3, delay=1.5):
     return ""
 
 
-# ── LISTING PAGES — get slugs ──────────────────────────────────────────────────
-
-def scrape_slugs():
-    slugs = []
-    seen = set()
-    for page in range(1, 6):
-        url = LISTING_BASE if page == 1 else f"{LISTING_BASE}?page={page}"
-        print(f"  Listing page {page}: {url}")
-        html = get(url, delay=2)
-        # Partner detail links look like /es_ES/partners/<slug>-<id>?country_id=67
-        # The slug itself contains no slash; filter links (/partners/country/...,
-        # /partners/grade/...) DO contain slashes, so excluding '/' rejects them.
-        # The id is followed by a query string ('?') or the closing quote.
-        found = re.findall(r'href="(/es_ES/partners/[^"/?#]+?-\d+)(?:\?|")', html)
-        for s in found:
-            if s not in seen:
-                seen.add(s)
-                slugs.append(s)
-    print(f"  Found {len(slugs)} partner slugs")
-    return slugs
-
-
-# ── INDIVIDUAL PARTNER PAGE ────────────────────────────────────────────────────
+# ── LISTING PAGES — partner cards with all stats ────────────────────────────────
 
 def parse_int(text):
     cleaned = re.sub(r'[^\d]', '', text)
     return int(cleaned) if cleaned else 0
 
 
-def scrape_partner(slug, idx):
+def parse_cards(html):
+    """Parse every partner card on a listing page.
+
+    The listing page renders one card per partner, each wrapped in an anchor
+    with aria-label="Ir al distribuidor" pointing at the detail page. The card
+    already carries every numeric stat we need (grade, retention %, average and
+    largest project size, reference count and certified-expert count), so we
+    read them here and only visit the detail page for the client list + sectors.
+    """
+    cards = []
+    anchors = list(re.finditer(
+        r'aria-label="Ir al distribuidor"\s+href="(/es_ES/partners/[^"?#]+)', html))
+    starts = [m.start() for m in anchors] + [len(html)]
+    for i, m in enumerate(anchors):
+        block = html[m.start():starts[i + 1]]
+        slug = m.group(1)
+
+        nm = re.search(r'<h5[^>]*>\s*<span>([^<]+)</span>', block)
+        name = ihtml.unescape(nm.group(1)).strip() if nm else \
+            slug.split("/")[-1].replace("-", " ").title()
+
+        # Grade badge classes: bg_gold / bg_silver / (none → Ready)
+        if "bg_gold" in block:
+            grade = "Gold"
+        elif "bg_silver" in block:
+            grade = "Silver"
+        else:
+            grade = "Ready"
+
+        rt = re.search(r'<small><span>(\d+)</span>\s*%', block)
+        retention = int(rt.group(1)) if rt else 0
+        avg = re.search(r'Proyecto medio:.*?(\d[\d.]*)\s*usuarios', block, re.DOTALL)
+        avg_users = parse_int(avg.group(1)) if avg else 0
+        lg = re.search(r'Proyecto m[^:]*grande:.*?(\d[\d.+]*)\s*usuarios', block, re.DOTALL)
+        large_users = parse_int(lg.group(1)) if lg else 0
+        rf = re.search(r'(\d[\d.,]*)\s*Referencias', block)
+        refs = parse_int(rf.group(1)) if rf else 0
+        ex = re.search(r'(\d[\d.,]*)\s*con certificaci', block)
+        experts = parse_int(ex.group(1)) if ex else 0
+
+        rid_m = re.search(r'-(\d+)$', slug)
+        cards.append({
+            "slug": slug,
+            "rid": rid_m.group(1) if rid_m else "",
+            "name": name,
+            "grade": grade,
+            "retention": retention,
+            "refs": refs,
+            "avgUsers": avg_users,
+            "largeUsers": large_users,
+            "experts": experts,
+            "url": f"{BASE}{slug}",
+        })
+    return cards
+
+
+def scrape_listing():
+    """Paginate the Spain partner directory and return all partner cards."""
+    cards = []
+    seen = set()
+    MAX_PAGES = 20  # safety cap; Spain has ~5 pages of 20
+    for page in range(1, MAX_PAGES + 1):
+        url = LISTING_BASE if page == 1 else f"{LISTING_BASE}?page={page}"
+        print(f"  Listing page {page}: {url}")
+        html = get(url, delay=2)
+        page_cards = parse_cards(html)
+        if not page_cards:
+            break  # no more partners
+        new = 0
+        for c in page_cards:
+            if c["slug"] not in seen:
+                seen.add(c["slug"])
+                cards.append(c)
+                new += 1
+        if new == 0:
+            break  # pagination wrapped around / repeated last page
+    print(f"  Found {len(cards)} partner cards")
+    return cards
+
+
+# ── INDIVIDUAL PARTNER PAGE — client references + sectors ───────────────────────
+
+def scrape_partner(card, idx):
+    """Visit a partner's detail page to collect its client references and the
+    partner's own industry sector(s). Numeric stats already came from the card."""
+    slug = card["slug"]
     url = f"{BASE}{slug}?country_id=67"
     html = get(url, delay=1.5)
     if not html:
-        return None
-
-    # ── Name ──────────────────────────────────────────────────────────────────
-    m = re.search(r'<h1[^>]*>\s*([^<]+?)\s*</h1>', html)
-    name = m.group(1).strip() if m else slug.split("/")[-1].replace("-", " ").title()
-
-    # ── Grade ─────────────────────────────────────────────────────────────────
-    grade = "Ready"
-    grade_m = re.search(r'(?:partner.grade|grade)["\s]+([Gold|Silver|Ready]+)', html, re.IGNORECASE)
-    if not grade_m:
-        grade_m = re.search(r'<[^>]+class="[^"]*(?:badge|grade)[^"]*"[^>]*>([^<]*(?:Gold|Silver|Ready)[^<]*)<', html, re.IGNORECASE)
-    if grade_m:
-        g = grade_m.group(1).strip()
-        if "Gold" in g:
-            grade = "Gold"
-        elif "Silver" in g:
-            grade = "Silver"
-    # Fallback: look for plain text
-    if grade == "Ready":
-        if re.search(r'\bGold\b', html):
-            grade = "Gold"
-        elif re.search(r'\bSilver\b', html):
-            grade = "Silver"
-
-    # ── Stats — try multiple patterns ─────────────────────────────────────────
-    def find_stat(patterns):
-        for pat in patterns:
-            m = re.search(pat, html, re.IGNORECASE | re.DOTALL)
-            if m:
-                return parse_int(m.group(1))
-        return 0
-
-    refs = find_stat([
-        r'(\d[\d,.]*)\s*(?:referencias|references)',
-        r'(?:referencias|references)[^\d]*(\d[\d,.]*)',
-        r'"num_references"\s*:\s*(\d+)',
-    ])
-    retention = find_stat([
-        r'(\d+)\s*%\s*(?:retenci[oó]n|retention)',
-        r'(?:retenci[oó]n|retention)[^\d]*(\d+)\s*%',
-        r'"retention"\s*:\s*(\d+)',
-    ])
-    avg_users = find_stat([
-        r'(\d[\d,.]*)\s*(?:usuarios promedio|avg\.?\s*users?|average users?)',
-        r'(?:usuarios promedio|avg\.?\s*users?)[^\d]*(\d[\d,.]*)',
-        r'"avg_users"\s*:\s*(\d+)',
-    ])
-    large_users = find_stat([
-        r'(\d[\d,.]*)\s*(?:usuarios grandes?|large users?)',
-        r'(?:usuarios grandes?|large users?)[^\d]*(\d[\d,.]*)',
-        r'"large_users"\s*:\s*(\d+)',
-    ])
-    experts = find_stat([
-        r'(\d[\d,.]*)\s*(?:expertos certificados?|certified experts?)',
-        r'(?:expertos certificados?|certified experts?)[^\d]*(\d[\d,.]*)',
-        r'"certified_experts"\s*:\s*(\d+)',
-    ])
-
-    # ── Sectors (partner own tags) ────────────────────────────────────────────
-    # These are the partner's industry sectors, not client sectors
-    sector_raw = re.findall(r'text-bg-(?:primary|info|warning|success|danger)">([^<]+)</span>', html)
-    sectors = [[s.strip(), None] for s in dict.fromkeys(sector_raw) if s.strip()]
+        # Detail fetch failed — keep the card stats, just no client list.
+        return {**{k: card[k] for k in
+                   ("rid", "name", "grade", "retention", "refs",
+                    "avgUsers", "largeUsers", "experts", "url")},
+                "id": idx, "sectors": [], "refs_list": []}
 
     # ── Client reference names + sectors ──────────────────────────────────────
     # Each client reference is rendered as a card containing an anchor
@@ -140,44 +146,46 @@ def scrape_partner(slug, idx):
     # optionally followed (within the same card) by a sector badge
     #   <span class="badge ms-1 text-bg-secondary">SECTOR</span>
     #
-    # The old approach keyed off the avatar_128 <img> and its alt attribute. That
-    # missed any reference whose avatar tag was absent/different at scrape time,
-    # so the captured name count came up short (typically by 1). The customer
-    # anchor is always present for every reference, so we key off it instead and
+    # The customer anchor is present for every reference, so we key off it and
     # bound each reference's sector lookup to the slice before the next anchor.
     refs_list = []
     anchors = list(re.finditer(r'<a\s+href="/es_ES/customers/[^"]+"\s*>(.*?)</a>', html, re.DOTALL))
-    for idx, a in enumerate(anchors):
-        name = re.sub(r'<[^>]+>', '', a.group(1))      # strip any nested tags
-        name = ihtml.unescape(name).strip()
-        if not name:
+    for j, a in enumerate(anchors):
+        cname = re.sub(r'<[^>]+>', '', a.group(1))      # strip any nested tags
+        cname = ihtml.unescape(cname).strip()
+        if not cname:
             continue
         start = a.end()
-        end = anchors[idx + 1].start() if idx + 1 < len(anchors) else len(html)
-        s_m = re.search(r'text-bg-secondary">([^<]+)</span>', html[start:end])
+        end = anchors[j + 1].start() if j + 1 < len(anchors) else len(html)
+        # Client sector badges carry the ms-1 modifier; the partner's own sector
+        # badge does not, so this regex won't pick it up by mistake.
+        s_m = re.search(r'ms-1 text-bg-secondary">([^<]+)</span>', html[start:end])
         s = ihtml.unescape(s_m.group(1)).strip() if s_m else ""
-        refs_list.append({"n": name, "s": s})
+        refs_list.append({"n": cname, "s": s})
 
-    # Always use actual extracted count to stay in sync with refs_list
-    if refs_list:
-        refs = len(refs_list)
+    # ── Partner's own industry sector(s) ──────────────────────────────────────
+    # Rendered as <span class="badge text-bg-secondary">SECTOR</span> (no ms-1),
+    # before the client references list begins.
+    head = html[:anchors[0].start()] if anchors else html
+    sector_raw = re.findall(r'<span class="badge text-bg-secondary">([^<]+)</span>', head)
+    sectors = [[ihtml.unescape(s).strip(), None] for s in dict.fromkeys(sector_raw) if s.strip()]
 
-    # ── Numeric ID (rid) ──────────────────────────────────────────────────────
-    rid_m = re.search(r'-(\d+)$', slug)
-    rid = rid_m.group(1) if rid_m else ""
+    # Prefer the actual client count from the detail page; fall back to the
+    # card's reference count if no client anchors were found.
+    refs = len(refs_list) if refs_list else card["refs"]
 
     return {
         "id": idx,
-        "rid": rid,
-        "name": name,
-        "grade": grade,
-        "retention": retention,
+        "rid": card["rid"],
+        "name": card["name"],
+        "grade": card["grade"],
+        "retention": card["retention"],
         "refs": refs,
-        "avgUsers": avg_users,
-        "largeUsers": large_users,
-        "experts": experts,
+        "avgUsers": card["avgUsers"],
+        "largeUsers": card["largeUsers"],
+        "experts": card["experts"],
         "sectors": sectors,
-        "url": f"{BASE}{slug}",
+        "url": card["url"],
         "refs_list": refs_list,
     }
 
@@ -235,7 +243,7 @@ def build_html(partners_js, refs_js, partners):
     html = template.replace("__PARTNERS_DATA__", partners_js)
     html = html.replace("__REFS_DATA__", refs_js)
     html = re.sub(
-        r'90 partners · [^·]+ · fuente',
+        r'\d+\s*partners\s*·[^·]+·\s*fuente',
         f'{total} partners · {date_str} · fuente',
         html
     )
@@ -252,18 +260,18 @@ def build_html(partners_js, refs_js, partners):
 if __name__ == "__main__":
     print("=== Odoo Spain Partners Scraper ===")
 
-    print("\n[1/3] Scraping listing pages for slugs...")
-    slugs = scrape_slugs()
+    print("\n[1/3] Scraping listing pages for partner cards...")
+    cards = scrape_listing()
 
-    if len(slugs) < 10:
-        print(f"ERROR: Only {len(slugs)} slugs found — aborting to avoid overwriting with bad data.", file=sys.stderr)
+    if len(cards) < 10:
+        print(f"ERROR: Only {len(cards)} partner cards found — aborting to avoid overwriting with bad data.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"\n[2/3] Scraping {len(slugs)} partner pages...")
+    print(f"\n[2/3] Scraping {len(cards)} partner detail pages...")
     partners = []
-    for i, slug in enumerate(slugs):
-        print(f"  [{i+1}/{len(slugs)}] {slug}")
-        p = scrape_partner(slug, i + 1)
+    for i, card in enumerate(cards):
+        print(f"  [{i+1}/{len(cards)}] {card['name']}")
+        p = scrape_partner(card, i + 1)
         if p:
             partners.append(p)
 

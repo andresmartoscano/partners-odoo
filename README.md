@@ -1,7 +1,7 @@
 # Partners Odoo España
 
 Dashboard interactivo con los partners certificados de Odoo en España.  
-Se actualiza automáticamente cada noche mediante GitHub Actions.
+Se actualiza automáticamente cada 4 horas mediante GitHub Actions.
 
 ## Dashboard
 
