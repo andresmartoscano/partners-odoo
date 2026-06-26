@@ -1204,21 +1204,27 @@ function downloadCsv(content, filename) {
 
 // ── CLIENTES TAB ────────────────────────────────────────────────────────────
 let ALL_CLIENTS = [];
+let clientesBuilt = false;
 
-function buildClientesTable() {
+function initClientesTab() {
+  if (clientesBuilt) return;
+  clientesBuilt = true;
   ALL_CLIENTS = [];
-  PARTNERS.forEach(p => {
-    (REFS[p.rid] || []).forEach(r => {
-      ALL_CLIENTS.push({ name: r.n, sector: r.s || '—', partner: p.name, grade: p.grade, url: p.url });
+  PARTNERS.forEach(function(p) {
+    var list = REFS[p.rid] || [];
+    list.forEach(function(r) {
+      ALL_CLIENTS.push({ name: r.n || '', sector: r.s || '—', partner: p.name || '', grade: p.grade || '', url: p.url || null });
     });
   });
-  ALL_CLIENTS.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  ALL_CLIENTS.sort(function(a, b) { return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }); });
   renderClientes(ALL_CLIENTS);
 
-  document.getElementById('c-search').addEventListener('input', filterClientes);
-  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(b => b.classList.remove('active'));
+  var search = document.getElementById('c-search');
+  if (search) search.addEventListener('input', filterClientes);
+
+  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
       filterClientes();
     });
@@ -1226,108 +1232,82 @@ function buildClientesTable() {
 }
 
 function renderClientes(rows) {
-  const gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
-  document.getElementById('clientes-tbody').innerHTML = rows.map((r, i) => {
-    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.partner}</a>` : r.partner;
-    return `<tr><td class="num-col">${i+1}</td><td>${r.name}</td><td class="rn-sector">${r.sector}</td><td>${link}</td><td><span class="badge ${gc[r.grade]||''}">${r.grade}</span></td></tr>`;
-  }).join('');
-  document.getElementById('c-count').textContent = rows.length.toLocaleString('es') + ' clientes';
+  var tbody = document.getElementById('clientes-tbody');
+  var countEl = document.getElementById('c-count');
+  if (!tbody) return;
+  var gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var link = r.url
+      ? '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.partner + '</a>'
+      : r.partner;
+    html += '<tr>' +
+      '<td class="num-col">' + (i + 1) + '</td>' +
+      '<td>' + r.name + '</td>' +
+      '<td class="rn-sector">' + r.sector + '</td>' +
+      '<td>' + link + '</td>' +
+      '<td><span class="badge ' + (gc[r.grade] || '') + '">' + r.grade + '</span></td>' +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+  if (countEl) countEl.textContent = rows.length.toLocaleString('es') + ' clientes';
 }
 
 function filterClientes() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  renderClientes(ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  ));
+  var searchEl = document.getElementById('c-search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
+  var activeBtn = document.querySelector('#panel-clientes .ref-grade-filter.active');
+  var grade = activeBtn ? (activeBtn.dataset.grade || '') : '';
+  renderClientes(ALL_CLIENTS.filter(function(r) {
+    return (!grade || r.grade === grade) &&
+           (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
+                  r.sector.toLowerCase().indexOf(q) >= 0 ||
+                  r.partner.toLowerCase().indexOf(q) >= 0);
+  }));
 }
 
 function exportClientesCSV() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  const rows = ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  );
-  const csv = ['﻿Cliente,Sector,Partner,Nivel',
-    ...rows.map(r => [r.name, r.sector, r.partner, r.grade].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','))
-  ].join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'clientes-odoo-partners.csv'; a.click();
-}
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    
-// ── CLIENTES TAB ────────────────────────────────────────────────────────────
-let ALL_CLIENTS = [];
-
-function buildClientesTable() {
-  ALL_CLIENTS = [];
-  PARTNERS.forEach(p => {
-    (REFS[p.rid] || []).forEach(r => {
-      ALL_CLIENTS.push({ name: r.n, sector: r.s || '—', partner: p.name, grade: p.grade, url: p.url });
-    });
+  var searchEl = document.getElementById('c-search');
+  var q = searchEl ? searchEl.value.toLowerCase() : '';
+  var activeBtn = document.querySelector('#panel-clientes .ref-grade-filter.active');
+  var grade = activeBtn ? (activeBtn.dataset.grade || '') : '';
+  var rows = ALL_CLIENTS.filter(function(r) {
+    return (!grade || r.grade === grade) &&
+           (!q || r.name.toLowerCase().indexOf(q) >= 0 ||
+                  r.sector.toLowerCase().indexOf(q) >= 0 ||
+                  r.partner.toLowerCase().indexOf(q) >= 0);
   });
-  ALL_CLIENTS.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
-  renderClientes(ALL_CLIENTS);
-
-  document.getElementById('c-search').addEventListener('input', filterClientes);
-  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      filterClientes();
-    });
+  var lines = ['﻿Cliente,Sector,Partner,Nivel'];
+  rows.forEach(function(r) {
+    lines.push([r.name, r.sector, r.partner, r.grade].map(function(v) {
+      return '"' + (v || '').replace(/"/g, '""') + '"';
+    }).join(','));
   });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'clientes-odoo-partners.csv';
+  a.click();
 }
 
-function renderClientes(rows) {
-  const gc = { Gold: 'badge-gold', Silver: 'badge-silver', Ready: 'badge-ready' };
-  document.getElementById('clientes-tbody').innerHTML = rows.map((r, i) => {
-    const link = r.url ? `<a href="${r.url}" target="_blank" rel="noopener">${r.partner}</a>` : r.partner;
-    return `<tr><td class="num-col">${i+1}</td><td>${r.name}</td><td class="rn-sector">${r.sector}</td><td>${link}</td><td><span class="badge ${gc[r.grade]||''}">${r.grade}</span></td></tr>`;
-  }).join('');
-  document.getElementById('c-count').textContent = rows.length.toLocaleString('es') + ' clientes';
-}
-
-function filterClientes() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  renderClientes(ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  ));
-}
-
-function exportClientesCSV() {
-  const q = document.getElementById('c-search').value.toLowerCase();
-  const grade = document.querySelector('#panel-clientes .ref-grade-filter.active')?.dataset.grade || '';
-  const rows = ALL_CLIENTS.filter(r =>
-    (!grade || r.grade === grade) &&
-    (!q || r.name.toLowerCase().includes(q) || r.sector.toLowerCase().includes(q) || r.partner.toLowerCase().includes(q))
-  );
-  const csv = ['﻿Cliente,Sector,Partner,Nivel',
-    ...rows.map(r => [r.name, r.sector, r.partner, r.grade].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','))
-  ].join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'clientes-odoo-partners.csv'; a.click();
-}
-document.querySelectorAll('.tab-btn').forEach(b => {
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) {
       b.classList.remove('active');
       b.setAttribute('aria-selected', 'false');
     });
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
-    document.getElementById(btn.dataset.panel).classList.add('active');
+    var panelId = btn.dataset.panel;
+    document.getElementById(panelId).classList.add('active');
+    if (panelId === 'panel-clientes') initClientesTab();
   });
 });
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 buildTable();
 buildRefList();
-buildClientesTable();
 
 // Set initial sort indicator
 document.querySelector('[data-col="refs"]').classList.add('sort-desc');
