@@ -26,9 +26,11 @@ jobs:
         run: pip install -r scraper/requirements.txt
 
       - name: Run scraper
+        id: scraper
         run: python scraper/scraper.py
 
       - name: Commit updated index.html
+        if: steps.scraper.outcome == 'success'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

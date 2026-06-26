@@ -46,7 +46,8 @@ def scrape_slugs():
         url = LISTING_BASE if page == 1 else f"{LISTING_BASE}?page={page}"
         print(f"  Listing page {page}: {url}")
         html = get(url, delay=2)
-        found = re.findall(r'href="(/es_ES/partners/[a-z0-9][a-z0-9\-]*-\d+)"', html)
+        # Allow any URL-safe chars in slug, not just lowercase
+        found = re.findall(r'href="(/es_ES/partners/[^"?#]+?-\d+)"', html)
         for s in found:
             if s not in seen:
                 seen.add(s)
@@ -239,6 +240,10 @@ if __name__ == "__main__":
     print("\n[1/3] Scraping listing pages for slugs...")
     slugs = scrape_slugs()
 
+    if len(slugs) < 10:
+        print(f"ERROR: Only {len(slugs)} slugs found — aborting to avoid overwriting with bad data.", file=sys.stderr)
+        sys.exit(1)
+
     print(f"\n[2/3] Scraping {len(slugs)} partner pages...")
     partners = []
     for i, slug in enumerate(slugs):
@@ -246,6 +251,10 @@ if __name__ == "__main__":
         p = scrape_partner(slug, i + 1)
         if p:
             partners.append(p)
+
+    if len(partners) < 10:
+        print(f"ERROR: Only {len(partners)} partners scraped — aborting to avoid overwriting with bad data.", file=sys.stderr)
+        sys.exit(1)
 
     print(f"\n[3/3] Building HTML...")
     partners_js, partners_sorted = build_partners_js(partners)
