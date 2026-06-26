@@ -732,7 +732,7 @@
       <button class="grade-btn" data-grade="Silver">Silver</button>
       <button class="grade-btn" data-grade="Ready">Ready</button>
     </div>
-    <div class="export-wrap"><button class="csv-btn" onclick="toggleExport('export-menu-c')">Exportar &#9662;</button><div class="export-menu" id="export-menu-c"><button onclick="doExportClientes('csv');closeExport('export-menu-c')">CSV</button><button onclick="doExportClientes('xlsx');closeExport('export-menu-c')">Excel (.xlsx)</button></div></div>
+    <div class="export-wrap"><button class="export-btn" onclick="toggleExport('export-menu-c')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Exportar &#9662;</button><div class="export-menu" id="export-menu-c"><button onclick="doExportClientes('csv');closeExport('export-menu-c')">CSV</button><button onclick="doExportClientes('xlsx');closeExport('export-menu-c')">Excel (.xlsx)</button></div></div>
     <span id="c-count" style="margin-left:auto;color:var(--muted);font-size:.8rem;white-space:nowrap"></span>
   </div>
   <div class="table-wrap">
@@ -1282,7 +1282,7 @@ function renderClientes(rows) {
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
     var link = r.url
-      ? '<a href="' + r.url + '" target="_blank" rel="noopener">' + r.partner + '</a>'
+      ? '<a class="partner-link" href="' + r.url + '" target="_blank" rel="noopener"><span class="partner-name">' + r.partner + '</span></a>'
       : r.partner;
     html += '<tr>' +
       '<td class="num-col">' + (i + 1) + '</td>' +
