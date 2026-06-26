@@ -1009,22 +1009,6 @@ document.getElementById('p-search').addEventListener('input', e => {
   applyFilters();
 });
 
-const cols = ['Nivel','Partner','Referencias','Retención (%)','Proy. medio (us.)','Proy. grande (~us.)','Expertos cert.','Sector 1','Sector 2','Sector 3'];
-  const rows = visible.map(p => [
-    p.grade,
-    `"${escape(p.name)}"`,
-    p.refs,
-    p.retention ?? '',
-    p.avgUsers ?? '',
-    p.largeUsers ?? '',
-    p.experts,
-    p.sectors[0]?.[0] ?? '',
-    p.sectors[1]?.[0] ?? '',
-    p.sectors[2]?.[0] ?? '',
-  ]);
-  const csv = [cols.join(','), ...rows.map(r => r.join(','))].join('\n');
-  downloadCsv(csv, 'partners-odoo-espana.csv');
-});
 
 // ── TAB 2: REFERENCIAS ─────────────────────────────────────────────────────
 let refFilterGrade = 'all', refSearch = '', selectedId = null;
