@@ -946,10 +946,10 @@ document.querySelectorAll('thead th.sortable').forEach(th => {
 });
 
 // Grade filter
-document.querySelectorAll('.grade-filters .grade-btn').forEach(btn => {
+document.querySelectorAll('#panel-partners .grade-filters .grade-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     filterGrade = btn.dataset.grade;
-    document.querySelectorAll('.grade-filters .grade-btn').forEach(b => {
+    document.querySelectorAll('#panel-partners .grade-filters .grade-btn').forEach(b => {
       b.className = 'grade-btn';
     });
     btn.classList.add(filterGrade === 'all' ? 'active-all' :
@@ -1220,10 +1220,12 @@ function initClientesTab() {
   var search = document.getElementById('c-search');
   if (search) search.addEventListener('input', filterClientes);
 
-  document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(btn) {
+  document.querySelectorAll('#c-grade-filters .grade-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      document.querySelectorAll('#panel-clientes .ref-grade-filter').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
+      document.querySelectorAll('#c-grade-filters .grade-btn').forEach(function(b) { b.className = 'grade-btn'; });
+      var g = btn.dataset.grade;
+      btn.className = 'grade-btn ' + (g === 'all' ? 'active-all' :
+        g === 'Gold' ? 'active-gold' : g === 'Silver' ? 'active-silver' : 'active-ready');
       filterClientes();
     });
   });
