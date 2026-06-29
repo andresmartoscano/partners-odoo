@@ -67,7 +67,15 @@ lanzar a mano: Actions → "Update Partner Dashboard" → Run workflow.
 2. **Valida el JavaScript antes de publicar** (ver pitfalls). Un solo error de
    sintaxis deja la web entera en blanco.
 3. Regenera `template.html` desde el `index.html` actualizado.
-4. `git add index.html scraper/template.html && git commit && git pull --no-edit && git push`.
+4. **Publica primero en el Artifact privado para revisión** (NO hacer push aún).
+   El Artifact es privado (solo lo ve el usuario) y hace de **entorno de pruebas**
+   — no hay otro. URL fija del proyecto:
+   `https://claude.ai/code/artifact/9c0ff10d-008d-4313-b835-f948dbf0c6c2`
+   (republicar siempre sobre esa misma URL, no crear enlaces nuevos).
+5. **Espera el OK del usuario.** Solo cuando confirme que se ve bien:
+   `git add index.html scraper/template.html && git commit && git pull --no-edit && git push`
+   → GitHub Pages es **público**, por eso el push va siempre después de la
+   aprobación en el Artifact.
 
 ### Regenerar datos a mano
 ```bash

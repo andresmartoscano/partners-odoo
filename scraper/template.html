@@ -618,6 +618,26 @@
 .export-menu.open{display:block}
 .export-menu button{display:block;width:100%;padding:8px 14px;text-align:left;background:none;border:none;font-size:.82rem;color:var(--text);cursor:pointer;white-space:nowrap}
 .export-menu button:hover{background:var(--bg)}
+
+  /* ── TAB 4: POSIBLES DUPLICADOS ──────────────────────── */
+  .dup-intro { padding: 10px 24px 0; color: var(--text-2); font-size: .8rem; line-height: 1.45; }
+  .dup-intro b { color: var(--text-1); font-weight: 700; }
+  .dup-wrap { flex: 1; overflow-y: auto; padding: 16px 24px 28px; min-height: 0; }
+  .dup-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; align-items: start; }
+  .dup-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow-sm); overflow: hidden; }
+  .dup-group.dup-hidden { display: none; }
+  .dup-group-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--row-alt); }
+  .dup-group-head .partner-link { font-weight: 700; font-size: .82rem; color: var(--text-1); text-decoration: none; }
+  .dup-group-head .partner-link:hover { color: var(--accent); text-decoration: underline; }
+  .dup-reason { margin-left: auto; font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .dup-reason.r-cont { color: #8A5C00; background: var(--gold-bg); border: 1px solid var(--gold-border); }
+  .dup-reason.r-sim { color: var(--accent); background: var(--accent-light); border: 1px solid #B9CCF5; }
+  .dup-members { list-style: none; margin: 0; padding: 6px 0; }
+  .dup-members li { display: flex; align-items: baseline; gap: 8px; padding: 6px 14px; font-size: .82rem; color: var(--text-1); border-top: 1px solid var(--border); }
+  .dup-members li:first-child { border-top: none; }
+  .dup-members .dup-name { flex: 1; }
+  .dup-members .dup-sector { color: var(--text-3); font-size: .72rem; white-space: nowrap; }
+  .dup-members .dup-bullet { color: var(--text-3); font-size: .7rem; }
 </style>
 
 <!-- HEADER -->
@@ -631,6 +651,7 @@
     <button class="tab-btn active" role="tab" data-panel="panel-partners" aria-selected="true">Listado de Partners</button>
     <button class="tab-btn" role="tab" data-panel="panel-referencias" aria-selected="false">Referencias por Partner</button>
     <button class="tab-btn" role="tab" data-panel="panel-clientes" aria-selected="false">Clientes</button>
+    <button class="tab-btn" role="tab" data-panel="panel-duplicados" aria-selected="false">Posibles duplicados</button>
   </nav>
   <span class="header-meta">90 partners · jun 2026 · fuente: odoo.com</span>
 </header>
@@ -749,6 +770,34 @@
         </thead>
         <tbody id="clientes-tbody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 4: POSIBLES DUPLICADOS -->
+<div id="panel-duplicados" class="tab-panel" role="tabpanel">
+  <div class="toolbar">
+    <span class="toolbar-label">Buscar</span>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input class="search-input" id="d-search" type="search" placeholder="Partner o cliente…" autocomplete="off">
+    </div>
+    <div class="grade-filters" id="d-grade-filters">
+      <button class="grade-btn active-all" data-grade="all">Todos</button>
+      <button class="grade-btn" data-grade="Gold">Gold</button>
+      <button class="grade-btn" data-grade="Silver">Silver</button>
+      <button class="grade-btn" data-grade="Ready">Ready</button>
+    </div>
+    <div class="spacer"></div>
+    <span class="count-badge" id="d-count">—</span>
+    <div class="export-wrap"><button class="export-btn" onclick="toggleExport('export-menu-d')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Exportar &#9662;</button><div class="export-menu" id="export-menu-d"><button onclick="doExportDups('csv');closeExport('export-menu-d')">CSV</button><button onclick="doExportDups('xlsx');closeExport('export-menu-d')">Excel (.xlsx)</button></div></div>
+  </div>
+  <div class="dup-intro" id="d-intro"></div>
+  <div class="dup-wrap">
+    <div class="dup-list" id="d-list"></div>
+    <div class="empty-state" id="d-empty" style="display:none">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <p>No se han detectado posibles referencias duplicadas con estos filtros.</p>
     </div>
   </div>
 </div>
@@ -1239,6 +1288,233 @@ function exportClientesCSV() {
   a.click();
 }
 
+// ── TAB 4: POSIBLES DUPLICADOS ─────────────────────────────────────────────
+// Detección de referencias posiblemente duplicadas DENTRO de cada partner.
+// Criterio: normalizar (minúsculas, tildes, sufijos societarios, puntuación) →
+// contención de tokens distintivos, O similitud Jaro-Winkler ≥ umbral.
+var JW_THRESHOLD = 0.90;
+var DUP_STOPWORDS = {
+  'sl':1,'slu':1,'sll':1,'sa':1,'sau':1,'sap':1,'scp':1,'sccl':1,'sc':1,'scl':1,'coop':1,
+  'cb':1,'sociedad':1,'limitada':1,'anonima':1,'unipersonal':1,'sociedades':1,
+  'grupo':1,'group':1,'grup':1,'holding':1,'servicios':1,'serveis':1,'services':1,'service':1,
+  'soluciones':1,'solucions':1,'solutions':1,'solution':1,'consulting':1,'consultoria':1,
+  'tecnologia':1,'tecnologias':1,'technology':1,'technologies':1,'sistemas':1,'sistemes':1,
+  'systems':1,'system':1,'de':1,'del':1,'la':1,'el':1,'los':1,'las':1,'y':1,'i':1,'and':1,
+  'the':1,'for':1,'es':1,'espana':1,'iberica':1,'iberia':1,'international':1,'internacional':1,
+  'company':1,'compania':1,'empresa':1,'cia':1,'inc':1,'ltd':1,'gmbh':1
+};
+var dupsBuilt = false;
+var DUP_GROUPS = [];
+
+var DUP_DIACRITICS = new RegExp('[̀-ͯ]', 'g');
+function dupNormalize(s) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(DUP_DIACRITICS, '')
+    .replace(/[.,;:()«»"'`´\-/\\&]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function dupTokens(norm) {
+  return norm.split(' ').filter(function(t) { return t.length > 1 && !DUP_STOPWORDS[t]; });
+}
+function jaroWinkler(a, b) {
+  if (a === b) return 1;
+  if (!a.length || !b.length) return 0;
+  var md = Math.max(0, Math.floor(Math.max(a.length, b.length) / 2) - 1);
+  var aM = new Array(a.length).fill(false), bM = new Array(b.length).fill(false), m = 0;
+  for (var i = 0; i < a.length; i++) {
+    var s = Math.max(0, i - md), e = Math.min(i + md + 1, b.length);
+    for (var j = s; j < e; j++) {
+      if (bM[j] || a[i] !== b[j]) continue;
+      aM[i] = bM[j] = true; m++; break;
+    }
+  }
+  if (m === 0) return 0;
+  var t = 0, k = 0;
+  for (var i2 = 0; i2 < a.length; i2++) {
+    if (!aM[i2]) continue;
+    while (!bM[k]) k++;
+    if (a[i2] !== b[k]) t++;
+    k++;
+  }
+  t /= 2;
+  var jaro = (m / a.length + m / b.length + (m - t) / m) / 3;
+  var p = 0, lim = Math.min(4, a.length, b.length);
+  for (var i3 = 0; i3 < lim; i3++) { if (a[i3] === b[i3]) p++; else break; }
+  return jaro + p * 0.1 * (1 - jaro);
+}
+// Devuelve null si no son sospechosos, o {type:'cont'|'sim', score} si lo son.
+function dupMatch(na, nb) {
+  if (!na.norm || !nb.norm) return null;
+  // Capa 2-A: contención de tokens distintivos
+  var ta = na.tokens, tb = nb.tokens;
+  if (ta.length && tb.length) {
+    var shorter = ta.length <= tb.length ? ta : tb;
+    var longer = ta.length <= tb.length ? tb : ta;
+    var setL = {}; longer.forEach(function(t) { setL[t] = 1; });
+    var shared = 0; shorter.forEach(function(t) { if (setL[t]) shared++; });
+    // todos los tokens del corto presentes en el largo; si el corto tiene 1 solo
+    // token exigimos que sea largo (≥4) para no pillar genéricos sueltos
+    if (shared === shorter.length && (shorter.length >= 2 || (shorter[0] && shorter[0].length >= 4))) {
+      return { type: 'cont', score: 1 };
+    }
+  }
+  // Capa 2-B: similitud consciente de tokens — solo dispara cuando los dos
+  // nombres tienen el MISMO conjunto de tokens distintivos y la única diferencia
+  // es una errata/variante en alguno (Jaro-Winkler por token). Así pillamos
+  // "Inmologistica" vs "Inmolojistica" sin marcar "Laboratorios X / Laboratorios Y".
+  if (ta.length && tb.length && ta.length === tb.length) {
+    var used = new Array(tb.length).fill(false), matched = 0, anyFuzzy = false;
+    for (var x = 0; x < ta.length; x++) {
+      var best = -1, bestScore = 0;
+      for (var y = 0; y < tb.length; y++) {
+        if (used[y]) continue;
+        var sc = ta[x] === tb[y] ? 1 : jaroWinkler(ta[x], tb[y]);
+        if (sc > bestScore) { bestScore = sc; best = y; }
+      }
+      if (best >= 0 && bestScore >= JW_THRESHOLD) {
+        used[best] = true; matched++;
+        if (ta[x] !== tb[best]) anyFuzzy = true;
+      }
+    }
+    if (matched === ta.length && anyFuzzy) return { type: 'sim', score: 1 };
+  }
+  return null;
+}
+function buildDups() {
+  if (dupsBuilt) return;
+  dupsBuilt = true;
+  DUP_GROUPS = [];
+  PARTNERS.forEach(function(p) {
+    var list = REFS[p.rid] || [];
+    if (list.length < 2) return;
+    var items = list.map(function(r) {
+      var norm = dupNormalize(r.n);
+      return { n: r.n || '', s: r.s || '—', norm: norm, tokens: dupTokens(norm) };
+    });
+    // union-find sobre los índices que coinciden por pares
+    var parent = items.map(function(_, i) { return i; });
+    function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+    function union(a, b) { var ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; }
+    var pairType = {}; // raíz → tiene algún 'cont'
+    for (var i = 0; i < items.length; i++) {
+      for (var j = i + 1; j < items.length; j++) {
+        var mm = dupMatch(items[i], items[j]);
+        if (mm) { union(i, j); if (mm.type === 'cont') pairType[i] = pairType[j] = 'cont'; }
+      }
+    }
+    var clusters = {};
+    for (var k = 0; k < items.length; k++) {
+      var root = find(k);
+      // solo cuenta si el nodo está conectado a algún otro
+      (clusters[root] = clusters[root] || []).push(k);
+    }
+    Object.keys(clusters).forEach(function(root) {
+      var idxs = clusters[root];
+      if (idxs.length < 2) return; // grupos reales tienen ≥2 miembros
+      var anyCont = idxs.some(function(ix) { return pairType[ix] === 'cont'; });
+      DUP_GROUPS.push({
+        partner: p.name, grade: p.grade, url: p.url,
+        members: idxs.map(function(ix) { return { n: items[ix].n, s: items[ix].s }; }),
+        type: anyCont ? 'cont' : 'sim'
+      });
+    });
+  });
+  // ordenar: más miembros primero, luego por partner
+  DUP_GROUPS.sort(function(a, b) {
+    return b.members.length - a.members.length || a.partner.localeCompare(b.partner, 'es');
+  });
+}
+function dupFilteredGroups() {
+  var se = document.getElementById('d-search');
+  var q = se ? se.value.toLowerCase() : '';
+  var ab = document.querySelector('#d-grade-filters .grade-btn.active-all, #d-grade-filters .grade-btn.active-gold, #d-grade-filters .grade-btn.active-silver, #d-grade-filters .grade-btn.active-ready');
+  var grade = (ab && ab.dataset.grade !== 'all') ? ab.dataset.grade : '';
+  return DUP_GROUPS.filter(function(g) {
+    if (grade && g.grade !== grade) return false;
+    if (!q) return true;
+    if (g.partner.toLowerCase().indexOf(q) >= 0) return true;
+    return g.members.some(function(m) { return m.n.toLowerCase().indexOf(q) >= 0; });
+  });
+}
+function renderDups() {
+  var listEl = document.getElementById('d-list');
+  var emptyEl = document.getElementById('d-empty');
+  var countEl = document.getElementById('d-count');
+  if (!listEl) return;
+  var groups = dupFilteredGroups();
+  var totalPairs = DUP_GROUPS.reduce(function(s, g) { return s + g.members.length; }, 0);
+  document.getElementById('d-intro').innerHTML =
+    'Detectados <b>' + DUP_GROUPS.length + '</b> grupos de referencias posiblemente duplicadas ' +
+    'dentro de un mismo partner (<b>' + totalPairs + '</b> referencias implicadas). ' +
+    'Criterio: contención de nombres o similitud ≥ ' + Math.round(JW_THRESHOLD * 100) + '%. ' +
+    'Son <b>candidatos</b> — conviene revisarlos manualmente.';
+  if (!groups.length) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = '';
+    if (countEl) countEl.textContent = '0 grupos';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  if (countEl) countEl.textContent = groups.length.toLocaleString('es') + (groups.length === 1 ? ' grupo' : ' grupos');
+  var html = '';
+  for (var i = 0; i < groups.length; i++) {
+    var g = groups[i];
+    var link = g.url
+      ? '<a class="partner-link" href="' + g.url + '" target="_blank" rel="noopener">' + g.partner + '</a>'
+      : '<span class="partner-link">' + g.partner + '</span>';
+    var reason = g.type === 'cont'
+      ? '<span class="dup-reason r-cont">contención de nombres</span>'
+      : '<span class="dup-reason r-sim">nombres similares</span>';
+    var members = g.members.map(function(m) {
+      return '<li><span class="dup-bullet">•</span><span class="dup-name">' + m.n + '</span>' +
+             '<span class="dup-sector">' + m.s + '</span></li>';
+    }).join('');
+    html += '<div class="dup-group">' +
+      '<div class="dup-group-head">' + link + ' ' + gradeChip(g.grade) + reason + '</div>' +
+      '<ul class="dup-members">' + members + '</ul></div>';
+  }
+  listEl.innerHTML = html;
+}
+function initDupsTab() {
+  buildDups();
+  if (initDupsTab._wired) { renderDups(); return; }
+  initDupsTab._wired = true;
+  var se = document.getElementById('d-search');
+  if (se) se.addEventListener('input', renderDups);
+  document.querySelectorAll('#d-grade-filters .grade-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#d-grade-filters .grade-btn').forEach(function(b) {
+        b.className = 'grade-btn';
+      });
+      btn.className = 'grade-btn active-' + (btn.dataset.grade === 'all' ? 'all' : btn.dataset.grade.toLowerCase());
+      renderDups();
+    });
+  });
+  renderDups();
+}
+function doExportDups(fmt) {
+  buildDups();
+  var groups = dupFilteredGroups();
+  var headers = ['Grupo', 'Partner', 'Nivel', 'Cliente', 'Sector', 'Motivo'];
+  var rows = [];
+  groups.forEach(function(g, gi) {
+    g.members.forEach(function(m) {
+      rows.push([String(gi + 1), g.partner, g.grade, m.n, m.s, g.type === 'cont' ? 'Contención de nombres' : 'Nombres similares']);
+    });
+  });
+  if (fmt === 'xlsx') {
+    downloadAs(toXlsXml(headers, rows), 'duplicados-odoo-partners.xls', 'application/vnd.ms-excel');
+  } else {
+    var lines = ['﻿' + headers.join(',')];
+    rows.forEach(function(r) {
+      lines.push(r.map(function(v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(','));
+    });
+    downloadAs(lines.join('\r\n'), 'duplicados-odoo-partners.csv', 'text/csv;charset=utf-8');
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(function(b) {
@@ -1251,6 +1527,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     var panelId = btn.dataset.panel;
     document.getElementById(panelId).classList.add('active');
     if (panelId === 'panel-clientes') initClientesTab();
+    if (panelId === 'panel-duplicados') initDupsTab();
   });
 });
 
