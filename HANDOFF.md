@@ -50,10 +50,35 @@ github/
 
 `.github/workflows/update.yml` ejecuta el scraper **cada 4 horas**
 (`cron: '0 */4 * * *'`) y hace commit/push de `index.html` **solo si el scraper
-termina con éxito** (`if: steps.scraper.outcome == 'success'`). También se puede
-lanzar a mano: Actions → "Update Partner Dashboard" → Run workflow.
+termina con éxito** (`if: steps.scraper.outcome == 'success'`) **y solo si
+`index.html` cambió** (`git diff --cached --quiet || git commit`). Por eso puede
+haber horas sin commits aunque la Action corra: significa que no hubo cambios de
+datos. También se puede lanzar a mano: Actions → "Update Partner Dashboard" → Run
+workflow.
+
+> 🩺 **Diagnosticar la Action sin `gh`.** `gh` no está instalado y
+> `gh auth login` es interactivo (no se puede lanzar desde un shell no
+> interactivo). El repo es **público**, así que basta la API REST pública:
+> ```bash
+> curl -s "https://api.github.com/repos/andresmartoscano/partners-odoo/actions/runs?per_page=15"
+> ```
+> Mira `status`/`conclusion`/`event`/`created_at`. "Sin commits recientes" NO
+> equivale a "Action rota": puede ser simplemente que no hubo cambios de datos.
+
+> 📸 **Artifact ≠ web.** La **web** (GitHub Pages) se auto-actualiza vía Action.
+> El **Artifact** es una foto manual: solo cambia cuando se republica a mano. No
+> uses el Artifact para consultar cifras al día (envejece); es el entorno de
+> pruebas de diseño/UX. Antes de publicar el Artifact, `git pull` para no
+> retratar datos viejos.
 
 ## Cómo hacer cambios sin romper nada
+
+> 🔄 **PRIMERO: `git pull`.** La Action auto-commitea a `main` cada 4h
+> ("chore: update partners data"), así que tu clon local envejece solo. Empieza
+> SIEMPRE con `git fetch origin && git log --oneline HEAD..origin/main`; si estás
+> detrás, `git pull` (o `git reset --hard origin/main` si tienes basura local).
+> Editar/publicar sin actualizar = trabajar sobre datos viejos y arriesgar un
+> merge sucio o pushear cifras obsoletas.
 
 > ⚠️ **`index.html` y `scraper/template.html` deben mantenerse en SYNC.**
 > El template es `index.html` con los bloques de datos sustituidos por
