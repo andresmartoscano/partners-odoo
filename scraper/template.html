@@ -638,6 +638,12 @@
   .dup-members .dup-name { flex: 1; }
   .dup-members .dup-sector { color: var(--text-3); font-size: .72rem; white-space: nowrap; }
   .dup-members .dup-bullet { color: var(--text-3); font-size: .7rem; }
+
+  /* ── TAB 5: CAMBIOS DE PARTNER ── */
+  .chg-date { white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chg-arrow { color: var(--text-3); font-weight: 600; text-align: center; }
+  .chg-partner-cell { white-space: nowrap; }
+  .chg-partner-cell .grade-chip { margin-left: 6px; }
 </style>
 
 <!-- HEADER -->
@@ -652,8 +658,9 @@
     <button class="tab-btn" role="tab" data-panel="panel-referencias" aria-selected="false">Referencias por Partner</button>
     <button class="tab-btn" role="tab" data-panel="panel-clientes" aria-selected="false">Clientes</button>
     <button class="tab-btn" role="tab" data-panel="panel-duplicados" aria-selected="false">Posibles duplicados</button>
+    <button class="tab-btn" role="tab" data-panel="panel-cambios" aria-selected="false">Cambios de partner</button>
   </nav>
-  <span class="header-meta">90 partners · jun 2026 · fuente: odoo.com</span>
+  <span class="header-meta">89 partners · jul 2026 · fuente: odoo.com</span>
 </header>
 
 <!-- TAB 1: PARTNERS -->
@@ -798,6 +805,43 @@
     <div class="empty-state" id="d-empty" style="display:none">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M21 21l-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       <p>No se han detectado posibles referencias duplicadas con estos filtros.</p>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 5: CAMBIOS DE PARTNER -->
+<div id="panel-cambios" class="tab-panel" role="tabpanel">
+  <div class="toolbar">
+    <span class="toolbar-label">Buscar</span>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input class="search-input" id="ch-search" type="search" placeholder="Cliente o partner…" autocomplete="off">
+    </div>
+    <div class="spacer"></div>
+    <span class="count-badge" id="ch-count">—</span>
+    <div class="export-wrap"><button class="export-btn" onclick="toggleExport('export-menu-ch')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M5 7l3 3 3-3M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Exportar &#9662;</button><div class="export-menu" id="export-menu-ch"><button onclick="doExportCambios('csv');closeExport('export-menu-ch')">CSV</button><button onclick="doExportCambios('xlsx');closeExport('export-menu-ch')">Excel (.xlsx)</button></div></div>
+  </div>
+  <div class="dup-intro" id="ch-intro"></div>
+  <div class="table-wrap">
+    <div class="table-inner">
+      <table id="cambios-table">
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th style="width:110px">Fecha detectado</th>
+            <th>Cliente</th>
+            <th>Sector</th>
+            <th>Partner anterior</th>
+            <th style="width:34px"></th>
+            <th>Partner nuevo</th>
+          </tr>
+        </thead>
+        <tbody id="ch-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="ch-empty" style="display:none">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <p>No hay cambios de partner que coincidan con la búsqueda.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1517,6 +1561,99 @@ function doExportDups(fmt) {
   }
 }
 
+// ── TAB 5: CAMBIOS DE PARTNER ──────────────────────────────────────────────
+// Historial de clientes que cambian de partner, detectado por el scraper
+// comparando snapshots sucesivos (scraper/changes.json).
+__CHANGES_DATA__
+
+var CH_MONTHS = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function chFmtDate(iso) {
+  var p = iso.split('-');
+  return p[2] + ' ' + CH_MONTHS[parseInt(p[1], 10) - 1] + ' ' + p[0];
+}
+function chPartnerCell(rid, name, grade) {
+  var p = null;
+  for (var i = 0; i < PARTNERS.length; i++) {
+    if (PARTNERS[i].rid === rid) { p = PARTNERS[i]; break; }
+  }
+  var url = p ? p.url : null;
+  var g = grade || (p ? p.grade : '');
+  var nameHtml = url
+    ? '<a class="partner-link" href="' + url + '" target="_blank" rel="noopener"><span class="partner-name">' + name + '</span></a>'
+    : name;
+  return '<td class="chg-partner-cell">' + nameHtml + (g ? ' ' + gradeChip(g) : '') + '</td>';
+}
+function chFiltered() {
+  var se = document.getElementById('ch-search');
+  var q = se ? se.value.toLowerCase().trim() : '';
+  return CHANGES.filter(function(c) {
+    if (!q) return true;
+    return c.n.toLowerCase().indexOf(q) >= 0 ||
+           c.f.toLowerCase().indexOf(q) >= 0 ||
+           c.t.toLowerCase().indexOf(q) >= 0 ||
+           (c.s || '').toLowerCase().indexOf(q) >= 0;
+  });
+}
+function chSorted(rows) {
+  return rows.slice().sort(function(a, b) {
+    return b.d.localeCompare(a.d) || a.n.localeCompare(b.n, 'es');
+  });
+}
+function renderCambios() {
+  var tbody = document.getElementById('ch-tbody');
+  var emptyEl = document.getElementById('ch-empty');
+  var countEl = document.getElementById('ch-count');
+  if (!tbody) return;
+  document.getElementById('ch-intro').innerHTML =
+    'Historial de clientes que han cambiado de partner: <b>' + CHANGES.length + '</b> cambio' + (CHANGES.length === 1 ? '' : 's') +
+    ' detectado' + (CHANGES.length === 1 ? '' : 's') + ' desde el 26 jun 2026 (inicio del histórico). ' +
+    'Se detectan comparando snapshots sucesivos de odoo.com (cada 4 h); la fecha es <b>orientativa</b>: ' +
+    'indica cuándo se detectó el cambio, no cuándo se produjo realmente.';
+  var rows = chSorted(chFiltered());
+  if (countEl) countEl.textContent = rows.length.toLocaleString('es') + (rows.length === 1 ? ' cambio' : ' cambios');
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = '';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  var html = '';
+  for (var i = 0; i < rows.length; i++) {
+    var c = rows[i];
+    html += '<tr>' +
+      '<td class="num-col">' + (i + 1) + '</td>' +
+      '<td class="chg-date">' + chFmtDate(c.d) + '</td>' +
+      '<td>' + c.n + '</td>' +
+      '<td class="rn-sector">' + (c.s || '—') + '</td>' +
+      chPartnerCell(c.fr, c.f, c.fg) +
+      '<td class="chg-arrow">→</td>' +
+      chPartnerCell(c.tr, c.t, c.tg) +
+      '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+function initCambiosTab() {
+  if (initCambiosTab._wired) { renderCambios(); return; }
+  initCambiosTab._wired = true;
+  var se = document.getElementById('ch-search');
+  if (se) se.addEventListener('input', renderCambios);
+  renderCambios();
+}
+function doExportCambios(fmt) {
+  var rows = chSorted(chFiltered());
+  var headers = ['Fecha detectado', 'Cliente', 'Sector', 'Partner anterior', 'Nivel anterior', 'Partner nuevo', 'Nivel nuevo'];
+  var data = rows.map(function(c) { return [c.d, c.n, c.s || '', c.f, c.fg || '', c.t, c.tg || '']; });
+  if (fmt === 'xlsx') {
+    downloadAs(toXlsXml(headers, data), 'cambios-partner-odoo.xls', 'application/vnd.ms-excel');
+  } else {
+    var lines = ['﻿' + headers.join(',')];
+    data.forEach(function(r) {
+      lines.push(r.map(function(v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(','));
+    });
+    downloadAs(lines.join('\r\n'), 'cambios-partner-odoo.csv', 'text/csv;charset=utf-8');
+  }
+}
+
 document.querySelectorAll('.tab-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
     document.querySelectorAll('.tab-btn').forEach(function(b) {
@@ -1530,6 +1667,7 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     document.getElementById(panelId).classList.add('active');
     if (panelId === 'panel-clientes') initClientesTab();
     if (panelId === 'panel-duplicados') initDupsTab();
+    if (panelId === 'panel-cambios') initCambiosTab();
   });
 });
 

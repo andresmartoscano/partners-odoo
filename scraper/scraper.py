@@ -218,12 +218,43 @@ def build_refs_js(partners):
     for p in partners:
         if p["refs_list"] and p["rid"]:
             refs_obj[p["rid"]] = [{"n": r["n"], "s": r["s"]} for r in p["refs_list"]]
-    return "const REFS=" + json.dumps(refs_obj, ensure_ascii=False, separators=(",", ":")) + ";"
+    return "const REFS=" + json.dumps(refs_obj, ensure_ascii=False, separators=(",", ":")) + ";", refs_obj
+
+
+# ── PARTNER CHANGES (historial de cambios de partner) ─────────────────────────
+
+def update_changes(new_refs_obj, partners):
+    """Diffea el index.html anterior contra los datos nuevos, acumula los cambios
+    de partner en scraper/changes.json y devuelve el JS para embeber."""
+    import partner_changes as pc
+    from datetime import date
+
+    changes = pc.load_changes()
+    prev_path = os.path.join(SCRIPT_DIR, "..", "index.html")
+    old_refs = None
+    if os.path.exists(prev_path):
+        with open(prev_path, "r", encoding="utf-8") as f:
+            old_html = f.read()
+        old_refs = pc.extract_refs(old_html)
+
+    if old_refs and len(old_refs) >= pc.MIN_PARTNERS_FOR_DIFF \
+            and len(new_refs_obj) >= pc.MIN_PARTNERS_FOR_DIFF:
+        meta = pc.extract_partner_meta(old_html)
+        meta.update({p["rid"]: {"name": p["name"], "grade": p["grade"]}
+                     for p in partners if p["rid"]})
+        found = pc.diff_snapshots(old_refs, new_refs_obj, meta, date.today().isoformat())
+        added = pc.append_changes(changes, found)
+        pc.save_changes(changes)
+        print(f"  Partner changes: {added} nuevos, {len(changes)} en total")
+    else:
+        print("  Partner changes: sin snapshot anterior valido, no se diffea")
+
+    return pc.build_changes_js(changes)
 
 
 # ── GENERATE HTML ──────────────────────────────────────────────────────────────
 
-def build_html(partners_js, refs_js, partners):
+def build_html(partners_js, refs_js, changes_js, partners):
     template_path = os.path.join(SCRIPT_DIR, "template.html")
     out_path = os.path.join(SCRIPT_DIR, "..", "index.html")
 
@@ -242,6 +273,7 @@ def build_html(partners_js, refs_js, partners):
 
     html = template.replace("__PARTNERS_DATA__", partners_js)
     html = html.replace("__REFS_DATA__", refs_js)
+    html = html.replace("__CHANGES_DATA__", changes_js)
     html = re.sub(
         r'\d+\s*partners\s*·[^·]+·\s*fuente',
         f'{total} partners · {date_str} · fuente',
@@ -281,7 +313,8 @@ if __name__ == "__main__":
 
     print(f"\n[3/3] Building HTML...")
     partners_js, partners_sorted = build_partners_js(partners)
-    refs_js = build_refs_js(partners_sorted)
-    build_html(partners_js, refs_js, partners_sorted)
+    refs_js, refs_obj = build_refs_js(partners_sorted)
+    changes_js = update_changes(refs_obj, partners_sorted)  # antes de sobreescribir index.html
+    build_html(partners_js, refs_js, changes_js, partners_sorted)
 
     print("\n=== Done ===")
